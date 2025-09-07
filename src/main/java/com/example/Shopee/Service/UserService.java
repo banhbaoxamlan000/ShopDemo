@@ -1,0 +1,268 @@
+package com.example.Shopee.Service;
+
+import com.example.Shopee.DTO.RequestDTO.*;
+import com.example.Shopee.DTO.ResponseDTO.*;
+import com.example.Shopee.Entity.*;
+import com.example.Shopee.Entity.PendingUser;
+import com.example.Shopee.Enums.PredefinedRole;
+import com.example.Shopee.Exception.AppException;
+import com.example.Shopee.Exception.ErrorCode;
+import com.example.Shopee.Mapper.AddressMapper;
+import com.example.Shopee.Mapper.ImageMapper;
+import com.example.Shopee.Mapper.UserMapper;
+import com.example.Shopee.Repository.*;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jwt.SignedJWT;
+import jakarta.transaction.Transactional;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.text.ParseException;
+import java.util.*;
+import java.util.function.Predicate;
+
+// ĐĂNG KÝ, ĐĂNG NHẬP, LẤY THÔNG TIN, CẬP NHẬT THÔNG TIN VÀ CẤM NGƯỜI DÙNG
+
+@Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Transactional
+public class UserService {
+    UserRepository userRepository;
+    UserMapper userMapper;
+    PasswordEncoder passwordEncoder;
+    RoleRepository roleRepository;
+    AuthenticationService authenticationService;
+    private final ShopRepository shopRepository;
+    ImageMapper imageMapper;
+    MailService mailService;
+    PendingUserRepository pendingUserRepository;
+
+    public String getUserID(String login)
+    {
+        if(userRepository.existsByUsername(login)) {
+            User result = userRepository.findByUsername(login).orElseThrow(
+                    () -> new AppException(ErrorCode.USER_NOT_EXISTED));
+            return result.getUserID();
+        }
+        if(userRepository.existsByPhone(login)) {
+            User result = userRepository.findByPhone(login).orElseThrow(
+                    () -> new AppException(ErrorCode.USER_NOT_EXISTED));
+            return result.getUserID();
+        }
+        if(userRepository.existsByEmail(login)) {
+            User result = userRepository.findByEmail(login).orElseThrow(
+                    () -> new AppException(ErrorCode.USER_NOT_EXISTED));
+            return result.getUserID();
+        }
+        throw new AppException(ErrorCode.USER_NOT_EXISTED);
+    }
+
+    String generateRandomNumber() {
+        Random random = new Random();
+        StringBuilder code = new StringBuilder();
+        for (int i = 0; i < 6; i++) {
+            code.append(random.nextInt(10));
+        }
+        return code.toString();
+    }
+
+
+    public UserResponse verify(VerificationRequest request)
+    {
+        PendingUser pendingUser = pendingUserRepository.findByEmail(request.getEmail())
+                .orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED));
+        if(!pendingUser.isVerified())
+        {
+            if(request.getCode().equals(pendingUser.getCode()))
+            {
+                User user = userMapper.toUser(pendingUser);
+                user.setActive(true);
+                user.setPassword(pendingUser.getPassword());
+                Set<Role> roles= new HashSet<>();
+                roleRepository.findById(PredefinedRole.USER_ROLE.getRole()).ifPresent(roles::add);
+                user.setRoles(roles);
+
+                user.setPictures(pendingUser.getPictures());
+
+                UserResponse result = userMapper.toUserResponse(userRepository.save(user));
+                pendingUser.setVerified(true);
+                pendingUserRepository.save(pendingUser);
+                result.setPictures(imageMapper.toImageResponse(pendingUser.getPictures()));
+
+                return result;
+            }
+            throw new AppException(ErrorCode.INVALID_VERIFY_CODE);
+        }
+        throw new AppException(ErrorCode.USER_EXISTED);
+    }
+
+    public UserResponse userRegistration(UserRegistration request)
+    {
+        if(pendingUserRepository.existsByUsername(request.getUsername()))
+            throw new AppException(ErrorCode.USERNAME_USED);
+
+        if(pendingUserRepository.existsByEmail(request.getEmail()))
+            throw new AppException(ErrorCode.EMAIL_USED);
+
+        if(pendingUserRepository.existsByPhone(request.getPhone()))
+            throw new AppException(ErrorCode.PHONE_USED);
+
+        PendingUser pendingUser = userMapper.toPendingUser(request);
+
+        pendingUser.setCode(generateRandomNumber());
+        Image image = imageMapper.toImage(request.getPictures());
+        pendingUser.setPictures(image);
+        pendingUser.setPassword(passwordEncoder.encode(request.getPassword()));
+        pendingUserRepository.save(pendingUser);
+        mailService.sendMail(request.getEmail(), pendingUser.getCode());
+
+        UserResponse result = userMapper.pendingUserToUserResponse(pendingUser);
+        result.setUserID(pendingUser.getID().toString());
+        result.setPictures(imageMapper.toImageResponse(pendingUser.getPictures()));
+        return result;
+    }
+
+
+    public List<UserResponse> findAllUsers()
+    {
+        List<User> users = userRepository.findAll();
+        List<UserResponse> results = new ArrayList<>();
+        for( User user : users)
+        {
+            results.add(userMapper.toUserResponse(user));
+        }
+        return results;
+    }
+
+    public UserResponse getMyInfo()
+    {
+        var context = SecurityContextHolder.getContext();
+        String login =context.getAuthentication().getName();
+        String userID = getUserID(login);
+
+        User user = userRepository.findById(userID).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        if(!user.getActive())
+            throw new AppException(ErrorCode.BANNED);
+        return userMapper.toUserResponse(user);
+    }
+
+    public UserResponse updateUser(UserUpdateRequest request)
+    {
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        if(!user.getActive())
+            throw new AppException(ErrorCode.BANNED);
+
+        if(!request.getEmail().equals(user.getEmail()))
+        {
+            if(userRepository.existsByEmail(request.getEmail()))
+            {
+                throw new AppException(ErrorCode.EMAIL_USED);
+            }
+
+        }
+        userMapper.updateUser(user, request);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        Image image = imageMapper.toImage(request.getPictures());
+        user.setPictures(image);
+
+        UserResponse result = userMapper.toUserResponse(userRepository.save(user));
+        result.setPictures(imageMapper.toImageResponse(image));
+        return result;
+    }
+
+    public void banUser(String userID)
+    {
+        User user = userRepository.findById(userID).orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED));
+        user.setActive(false);
+    }
+
+
+    public AuthenticationResponse logIn(AuthenticationRequest request)
+    {
+        String userID = getUserID(request.getUsername());
+
+        User user = userRepository.findById(userID)
+                .orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
+
+        if(!authenticated)
+        {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+        var token = authenticationService.generateToken(user);
+
+        return AuthenticationResponse.builder()
+                .token(token)
+                .authentication(true).build();
+    }
+
+    public boolean ownerShip(Item item)
+    {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userID = getUserID(authentication.getName());
+        User user = userRepository.findById(userID).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        Shop shop = shopRepository.findByUsername(user.getUsername()).orElseThrow(()-> new AppException(ErrorCode.SHOP_NOT_CREATED));
+        return shop.equals(item.getShop());
+    }
+
+    public boolean shopOwner(Shop request)
+    {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userID = getUserID(authentication.getName());
+        User user = userRepository.findById(userID).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        Shop shop = shopRepository.findByUsername(user.getUsername()).orElseThrow(()-> new AppException(ErrorCode.SHOP_NOT_CREATED));
+        return shop.equals(request);
+    }
+
+
+    // gửi code về mail và lưu pending user
+    public void reset(ResetPasswordRequest request)
+    {
+        PendingUser pendingUser = pendingUserRepository.findByEmail(request.getEmail())
+                .orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED));
+        pendingUser.setCode(generateRandomNumber());
+        pendingUserRepository.save(pendingUser);
+        mailService.sendMail(request.getEmail(), pendingUser.getCode());
+    }
+
+    // xác minh mã và gửi về token
+    public AuthenticationResponse resetPasswordAuthentication(VerificationRequest request)
+    {
+        PendingUser pendingUser = pendingUserRepository.findByEmail(request.getEmail())
+                .orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        if(pendingUser.getCode().equals(request.getCode()))
+        {
+            var token = authenticationService.generateResetPasswordToken(request.getEmail());
+            return AuthenticationResponse.builder()
+                    .token(token)
+                    .authentication(true).build();
+        }
+        throw new AppException(ErrorCode.INVALID_VERIFY_CODE);
+    }
+
+    public String resetPassword(ResetPasswordRequest request)  {
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        PendingUser pendingUser = pendingUserRepository.findByEmail(request.getEmail())
+                .orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        userRepository.save(user);
+        pendingUser.setPassword(null);
+        pendingUserRepository.save(pendingUser);
+        return "Password reset";
+
+    }
+}

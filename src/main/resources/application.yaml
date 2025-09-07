@@ -1,0 +1,34 @@
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active: uat
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  jackson:
+    date-format: yyyy-MM-dd HH:mm
+    time-zone: Asia/Ho_Chi_Minh
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: chihuahua522861@gmail.com
+    password: ruax sxan dchc ujey
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+logging:
+  level:
+    org.springframework.mail: DEBUG
+    javax.mail: DEBUG
+
+jwt:
+  signerKey: "kaeyazqva8OoomPSUJeGlMKoP09zUqh6caZmiYDSfjxfMoI8WJpbiFxyQFP5PNeh"
+  valid-duration: 3600 #second
+  refreshable-duration: 3600 #second
