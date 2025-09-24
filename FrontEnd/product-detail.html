@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        .star-rating {
+            display: inline-flex;
+            direction: rtl;
+        }
+        .star-rating input {
+            display: none;
+        }
+        .star-rating label {
+            color: #cbd5e0;
+            font-size: 1.5rem;
+            padding: 0 0.1rem;
+            cursor: pointer;
+        }
+        .star-rating input:checked ~ label,
+        .star-rating input:hover ~ label {
+            color: #f59e0b;
+        }
+        .attribute-option {
+            transition: all 0.2s ease;
+        }
+        .attribute-option.selected {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header Profile & Logo -->
+    <header class="shadow-sm" style="background: linear-gradient(90deg, #e0e7ff 0%, #c7d2fe 50%, #fbc2eb 100%); box-shadow: 0 4px 24px 0 rgba(124, 58, 237, 0.08);">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-2 flex items-center relative" style="align-items: center;">
+                <div class="flex flex-col items-start mr-8">
+                    <a href="shop-dashboard.html" class="mb-2 px-4 py-2 rounded-md bg-gradient-to-r from-blue-500 to-blue-300 text-white font-semibold shadow hover:from-blue-600 hover:to-blue-400 transition text-base" style="margin-bottom: 0; align-self: flex-start;">Seller Page</a>
+                    <a href="index.html" class="text-7xl font-extrabold bg-clip-text text-transparent" style="background-image: linear-gradient(90deg, #FFB347 0%, #FF69B4 100%); line-height: 1.1;">HS Mall</a>
+                </div>
+                <div class="flex-1 flex items-center">
+                    <form id="searchForm" class="relative w-full max-w-xl mx-auto flex items-center" style="align-items: center; display: flex;">
+                        <input id="searchInput" type="text" placeholder="Search products..." class="pl-10 pr-4 py-2 border rounded-full w-full focus:outline-none focus:ring-2 focus:ring-indigo-500" style="margin-top: 0; margin-bottom: 0;" />
+                        <button type="submit" class="absolute left-3 top-2.5 text-gray-400" style="top: 50%; transform: translateY(-50%); background: none; border: none; padding: 0; cursor: pointer;">
+                            <i data-feather="search"></i>
+                        </button>
+                    </form>
+                </div>
+                <div class="flex items-center space-x-6 ml-8">
+                    <div id="header-profile" class="flex items-center space-x-4">
+                        <div class="relative group" id="cartDropdown" style="display: flex; align-items: center; margin-right: 150px;">
+                            <a href="#" id="cartIcon" class="text-gray-600 hover:text-indigo-600" style="display: flex; align-items: center; position: relative;">
+                                <i data-feather="shopping-cart" class="w-8 h-8"></i>
+                            </a>
+                            <div id="cartMenu" class="hidden absolute left-1/2 transform -translate-x-1/2 top-full mt-3 w-72 bg-white rounded-md shadow-lg z-20" style="min-width: 18rem;">
+                                <div class="p-4">
+                                    <h4 class="font-medium text-gray-800">Your Cart</h4>
+                                    <div id="cartItems" class="mt-2 space-y-2"></div>
+                                    <div id="cartTotal" class="mt-4 flex justify-between items-center"></div>
+                                    <a href="cart.html" id="viewCartBtn" class="block mt-4 px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 text-center">View Cart</a>
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+                        <!-- Avatar and dropdown injected by JS -->
+                    </div>
+                </div>
+            </div>
+    </header>
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Breadcrumb -->
+
+        <!-- Product Section -->
+        <div class="flex flex-col md:flex-row gap-8 mb-12">
+            <!-- Product Images -->
+            <div class="w-full md:w-1/2">
+                    <div id="product-images" class="flex flex-col items-center">
+                        <img id="main-image" src="" alt="Product Image" class="w-80 h-80 object-cover rounded-xl mb-4" />
+                        <div id="thumbnails" class="flex space-x-2"></div>
+                    </div>
+            </div>
+
+            <!-- Product Info -->
+            <div class="w-full md:w-1/2">
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h1 id="product-name" class="text-2xl md:text-3xl font-bold text-gray-800 mb-2"></h1>
+                    
+                    <div class="flex items-center mb-4">
+                        <div class="flex items-center mr-4">
+                            <div id="product-rating" class="flex text-yellow-400"></div>
+                            <span id="rating-count" class="text-gray-600 text-sm ml-1"></span>
+                        </div>
+                        <span id="sold-quantity" class="text-green-600 text-sm font-medium flex items-center"></span>
+                    </div>
+
+                    <div class="mb-6">
+                        <div id="product-price" class="text-3xl font-bold text-pink-600 mb-2"></div>
+                        <div id="product-attributes" class="flex flex-wrap gap-2"></div>
+                    </div>
+
+                    
+
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Quantity</h3>
+                        <div id="quantity-available" class="text-sm text-gray-600 mb-2"></div>
+                        <div class="flex items-center">
+                            <button id="decrease-qty">
+                            </button>
+                            <input id="product-quantity" type="text" class="bg-gray-100 text-center w-16 py-2 border-t border-b border-gray-300" value="1">
+                            <button id="increase-qty" >
+                            </button>
+                        </div>
+
+                    </div>
+                    
+                    <div id="product-attributes-container" class="mb-6"></div>
+
+                    <div class="flex flex-col sm:flex-row gap-3 mb-6">
+                        <button id="add-to-cart-btn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center transition-colors">
+                            <i data-feather="shopping-cart" class="w-5 h-5 mr-2"></i>
+                            Add to Cart
+                        </button>
+                        <button id="buy-now-btn" class="flex-1 bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center transition-colors">
+                            <i data-feather="credit-card" class="w-5 h-5 mr-2"></i>
+                            Buy Now
+                        </button>
+                    </div>
+
+                    
+                </div>
+            </div>
+        </div>
+
+        <!-- Shop Info -->
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">About the Seller</h2>
+            <div class="flex items-start" id="shop-info">
+                <img id="shop-avatar" src="" alt="Shop Avatar" class="w-16 h-16 rounded-full mr-4" />
+                <div>
+                    <div id="shop-name" class="font-bold text-lg text-gray-800"></div>
+                    <div id="shop-rating" class="flex items-center text-yellow-400"></div>
+                </div>
+            </div>
+            <div class="mt-6">
+                <button id="shop-link" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg flex items-center">
+                    <i data-feather="store" class="w-4 h-4 mr-2"></i>
+                    Visit Store
+                </button>
+            </div>
+        </div>
+
+        <!-- Product Description & Details -->
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Product Description</h2>
+            <div id="product-description" class="prose max-w-none text-gray-600"></div>
+        </div>
+
+
+        <!-- Reviews Section -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-6">Reviews</h2>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+                <div class="mb-4 md:mb-0">
+                    <div class="flex items-center">
+                        <span id="average-rating" class="text-4xl font-bold text-gray-900 mr-2"></span>
+                        <div id="average-rating-stars" class="flex flex-col"></div>
+                    </div>
+                </div>
+                <div class="w-full md:w-1/2">
+                    <div class="flex items-center mb-1">
+                        <span class="text-gray-600 w-12">5 stars</span>
+                        <div id="star-5-bar" class="flex-1 bg-gray-200 rounded-full h-2.5 mx-2"></div>
+                    </div>
+                    <div class="flex items-center mb-1">
+                        <span class="text-gray-600 w-12">4 stars</span>
+                        <div id="star-4-bar" class="flex-1 bg-gray-200 rounded-full h-2.5 mx-2"></div>
+                    </div>
+                    <div class="flex items-center mb-1">
+                        <span class="text-gray-600 w-12">3 stars</span>
+                        <div id="star-3-bar" class="flex-1 bg-gray-200 rounded-full h-2.5 mx-2"></div>
+                    </div>
+                    <div class="flex items-center mb-1">
+                        <span class="text-gray-600 w-12">2 stars</span>
+                        <div id="star-2-bar" class="flex-1 bg-gray-200 rounded-full h-2.5 mx-2"></div>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="text-gray-600 w-12">1 star</span>
+                        <div id="star-1-bar" class="flex-1 bg-gray-200 rounded-full h-2.5 mx-2"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="reviews-list" class="mt-8 space-y-6"></div>
+            <button id="load-more-reviews" class="mt-6 w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg">
+                Load More Reviews
+            </button>
+        </div>
+    </div>
+
+
+
+    <!-- Inline modal for Buy Now checkout -->
+    <div id="pdCheckoutModal" class="hidden fixed inset-0 bg-black bg-opacity-30 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow w-full max-w-3xl">
+            <div class="p-4 border-b flex items-center justify-between">
+                <h3 class="text-lg font-medium text-gray-800">Quick Checkout</h3>
+                <button id="pdCloseCheckout" class="text-gray-500 hover:text-gray-700 px-2">✕</button>
+            </div>
+            <div class="p-5 grid grid-cols-1 lg:grid-cols-3 gap-5">
+                <div class="lg:col-span-2 space-y-5">
+                    <section>
+                        <h4 class="font-medium text-gray-800 mb-2">Delivery Method</h4>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2"><input type="radio" name="pdDelivery" value="economy" checked class="text-indigo-600"> <span>Economy Delivery </span></label>
+                            <label class="flex items-center gap-2"><input type="radio" name="pdDelivery" value="fast" class="text-indigo-600"> <span>Fast Delivery</span></label>
+                        </div>
+                    </section>
+
+                    <section>
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="font-medium text-gray-800">Shipping Address</h4>
+                            <button id="pdManageAddressBtn" class="px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700">Select / Add</button>
+                        </div>
+                        <div id="pdSelectedAddress" class="text-sm text-gray-700"></div>
+                    </section>
+
+                    <section>
+                        <h4 class="font-medium text-gray-800 mb-2">Item</h4>
+                        <div id="pdCheckoutItem" class="border rounded divide-y"></div>
+                    </section>
+                </div>
+                <aside class="bg-gray-50 rounded p-4 h-fit">
+                    <h4 class="font-medium text-gray-800 mb-3">Order Summary</h4>
+                    <div class="space-y-2 text-sm text-gray-700 mb-4">
+                        <div class="flex justify-between"><span>Subtotal</span><span id="pdSubtotal">$0.00</span></div>
+                        <div class="flex justify-between"><span>Delivery</span><span id="pdDeliveryFee">$0.00</span></div>
+                        <div class="border-t pt-2 flex justify-between font-semibold text-gray-900"><span>Total</span><span id="pdGrandTotal">$0.00</span></div>
+                    </div>
+                    <button id="pdPlaceOrder" class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700">Place Order</button>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <!-- Address Manager Modal reused in product detail -->
+    <div id="pdAddressManager" class="hidden fixed inset-0 bg-black bg-opacity-30 z-[60] flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow w-full max-w-2xl">
+            <div class="p-4 border-b flex items-center justify-between">
+                <h3 class="text-lg font-medium text-gray-800">Manage Addresses</h3>
+                <button id="pdCloseAddrManager" class="text-gray-500 hover:text-gray-700 px-2">✕</button>
+            </div>
+            <div class="p-4">
+                <div class="flex gap-2 mb-4">
+                    <button id="pdSelectTab" class="px-3 py-1 rounded border bg-indigo-50 text-indigo-700">Select</button>
+                    <button id="pdAddTab" class="px-3 py-1 rounded border">Add New</button>
+                </div>
+                <div id="pdSelectPanel">
+                    <div id="pdAddrList" class="space-y-3 max-h-72 overflow-y-auto pr-1"></div>
+                </div>
+                <div id="pdAddPanel" class="hidden">
+                    <form id="pdAddAddrForm" class="space-y-3">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <input id="pdAddrPhone" type="tel" placeholder="Phone" class="w-full border rounded px-3 py-2" required>
+                            <input id="pdAddrCity" type="text" placeholder="City" class="w-full border rounded px-3 py-2" required>
+                            <input id="pdAddrDistrict" type="text" placeholder="District" class="w-full border rounded px-3 py-2" required>
+                            <input id="pdAddrWard" type="text" placeholder="Ward" class="w-full border rounded px-3 py-2" required>
+                        </div>
+                        <input id="pdAddrDetail" type="text" placeholder="Detail (street, number)" class="w-full border rounded px-3 py-2" required>
+                        <div class="flex justify-end"><button type="submit" class="px-3 py-1 bg-indigo-600 text-white rounded">Save</button></div>
+                    </form>
+                </div>
+            </div>
+            <div class="p-4 border-t flex justify-end gap-2">
+                <button id="pdCancelAddrMgr" class="px-3 py-1 border rounded">Cancel</button>
+                <button id="pdUseSelectedAddr" class="px-3 py-1 bg-indigo-600 text-white rounded">Use Selected</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="product-detail.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            feather.replace();
+            AOS.init();
+            // Attribute selection functionality
+            document.querySelectorAll('.attribute-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    this.parentNode.querySelectorAll('.attribute-option').forEach(sibling => {
+                        sibling.classList.remove('selected');
+                    });
+                    this.classList.add('selected');
+                });
+            });
+            // Quantity adjustment
+            const quantityInput = document.querySelector('input[type="text"]');
+            document.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    if (this.querySelector('i[data-feather="plus"]')) {
+                        quantityInput.value = parseInt(quantityInput.value) + 1;
+                    } else if (this.querySelector('i[data-feather="minus"]')) {
+                        if (parseInt(quantityInput.value) > 1) {
+                            quantityInput.value = parseInt(quantityInput.value) - 1;
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+    <script src="search.js"></script>
+
+</body>
+</html>

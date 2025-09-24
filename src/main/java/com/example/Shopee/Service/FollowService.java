@@ -31,6 +31,17 @@ public class FollowService {
     UserService userService;
     UserRepository userRepository;
 
+    public boolean isFollow(FollowRequest request)
+    {
+        Shop shop = shopRepository.findById(request.getFollowingId())
+                .orElseThrow(()-> new AppException((ErrorCode.SHOP_NOT_CREATED)));
+
+        var authentication = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findById(userService.getUserID(authentication))
+                .orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED));
+        return followRepository.existsByUserAndShop(user, shop);
+    }
+
     public String followShop(FollowRequest request)
     {
         Shop shop = shopRepository.findById(request.getFollowingId())
@@ -54,6 +65,17 @@ public class FollowService {
         shop.setFollowers(followers);
         shopRepository.save(shop);
         return "Followed " + shop.getShopName();
+    }
+
+    public void unfollowShop(FollowRequest request)
+    {
+        Shop shop = shopRepository.findById(request.getFollowingId())
+                .orElseThrow(()-> new AppException((ErrorCode.SHOP_NOT_CREATED)));
+
+        var authentication = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findById(userService.getUserID(authentication))
+                .orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED));
+        followRepository.deleteByUserAndShop(user, shop);
     }
 
     public Set<FollowResponse> getFollowing()

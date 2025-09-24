@@ -1,10 +1,7 @@
 package com.example.Shopee.Service;
 
 import com.example.Shopee.DTO.RequestDTO.*;
-import com.example.Shopee.DTO.ResponseDTO.ItemResponse;
-import com.example.Shopee.DTO.ResponseDTO.SearchItemResponse;
-import com.example.Shopee.DTO.ResponseDTO.ShopDetailResponse;
-import com.example.Shopee.DTO.ResponseDTO.ShopResponse;
+import com.example.Shopee.DTO.ResponseDTO.*;
 import com.example.Shopee.Entity.*;
 import com.example.Shopee.Enums.PredefinedRole;
 import com.example.Shopee.Exception.AppException;
@@ -13,16 +10,17 @@ import com.example.Shopee.Mapper.ImageMapper;
 import com.example.Shopee.Mapper.ItemMapper;
 import com.example.Shopee.Mapper.ShopMapper;
 import com.example.Shopee.Repository.*;
+import com.example.Shopee.Utils.ImageUtils;
 import com.nimbusds.jose.JOSEException;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -46,7 +44,7 @@ public class ShopService {
     UserService userService;
     ImageMapper imageMapper;
 
-    public ShopResponse shopCreate(ShopRequest request) throws ParseException, JOSEException {
+    public ShopResponse shopCreate(ShopRequest request) throws ParseException, JOSEException, IOException {
         if(shopRepository.existsByTaxNumber(request.getTaxNumber()))
         {
             throw new AppException(ErrorCode.INVALID_TAX_NUMBER);
@@ -66,20 +64,16 @@ public class ShopService {
         Set<Role> roles = user.getRoles();
         roleRepository.findById(PredefinedRole.SHOP_ROLE.getRole()).ifPresent(roles :: add);
         user.setRoles(roles);
-        Image image = imageMapper.toImage(request.getPictures());
 
         Shop shop = shopMapper.toShop(request);
         shop.setUsername(user.getUsername());
         shop.setShopID(user.getUserID());
-        shop.setPictures(image);
         userRepository.save(user);
 
-        ShopResponse response = shopMapper.toShopResponse(shopRepository.save(shop));
-        response.setPictures(imageMapper.toImageResponse(image));
-        return  response;
+        return shopMapper.toShopResponse(shopRepository.save(shop));
     }
 
-    // lấy ra thông tin của shop qua tìm kiếm
+    // lấy ra thông tin chi tiết của shop (từ người dùng)
     public ShopDetailResponse getShopInfo(String id)
     {
         Shop shop = shopRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.SHOP_NOT_CREATED));
@@ -92,15 +86,22 @@ public class ShopService {
             total += i.getReviews().stream().mapToDouble(Review :: getRate).sum();
         }
         shop.setRatings(ratings);
-        shop.setRate(total / ratings);
-        ShopDetailResponse response = new ShopDetailResponse();
-        response.setShopResponse(shopMapper.toShopResponse(shop));
-
-        Set<Item> items = itemRepository.findByShop(shop);
-        Set<SearchItemResponse> s = new HashSet<>();
-        for(Item i : items)
+        shop.setRate(0.0);
+        if(total!= 0.0 && ratings != 0)
         {
-            s.add(itemMapper.toSearchItemResponse(i));
+            shop.setRate(total / ratings);
+        }
+        ShopDetailResponse response = new ShopDetailResponse();
+        ShopResponse shopResponse = shopMapper.toShopResponse(shop);
+        shopResponse.setTotalProduct(itemSet.size());
+        response.setShopResponse(shopResponse);
+
+        Set<SearchItemResponse> s = new HashSet<>();
+        for(Item i : itemSet)
+        {
+            SearchItemResponse searchItemResponse = itemMapper.toSearchItemResponse(i);
+            searchItemResponse.setImageID(i.getPictures().getFirst().getId());
+            s.add(searchItemResponse);
         }
         response.setItems(s);
         return response;
@@ -117,15 +118,47 @@ public class ShopService {
         Shop shop = shopRepository.findByUsername(user.getUsername()).orElseThrow(
                 () -> new AppException(ErrorCode.SHOP_NOT_CREATED));
         ShopDetailResponse response = new ShopDetailResponse();
-        response.setShopResponse(shopMapper.toShopResponse(shop));
+        ShopResponse shopResponse = shopMapper.toShopResponse(shop);
+        response.setShopResponse(shopResponse);
+
         Set<Item> items = itemRepository.findByShop(shop);
+        shopResponse.setTotalProduct(items.size());
         Set<SearchItemResponse> s = new HashSet<>();
         for(Item i : items)
         {
-            s.add(itemMapper.toSearchItemResponse(i));
+            SearchItemResponse searchItemResponse = itemMapper.toSearchItemResponse(i);
+            searchItemResponse.setImageID(i.getPictures().getFirst().getId());
+            s.add(searchItemResponse);
         }
         response.setItems(s);
         return response;
+    }
+
+    // lấy ra sản phẩm của shop đăng nhập
+
+    public Set<SearchItemResponse> shopItems()
+    {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        String login = userService.getUserID(authentication.getName());
+
+        User user = userRepository.findById(login).orElseThrow(
+                ()-> new AppException(ErrorCode.USER_NOT_EXISTED));
+        Shop shop = shopRepository.findByUsername(user.getUsername()).orElseThrow(
+                () -> new AppException(ErrorCode.SHOP_NOT_CREATED));
+        Set<Item> items = itemRepository.findByShop(shop);
+        if(items.isEmpty())
+        {
+            throw new AppException(ErrorCode.NON_ITEM);
+        }
+
+        Set<SearchItemResponse> itemResponses = new HashSet<>();
+        for(Item i : items)
+        {
+            SearchItemResponse itemResponse = itemMapper.toSearchItemResponse(i);
+            itemResponse.setImageID(i.getPictures().getFirst().getId());
+            itemResponses.add(itemResponse);
+        }
+        return itemResponses;
     }
 
     public List<ShopResponse> searchShop(String name)
@@ -136,13 +169,15 @@ public class ShopService {
 
         for(Shop s : results)
         {
-            responses.add(shopMapper.toShopResponse(s));
+            ShopResponse shopResponse = shopMapper.toShopResponse(s);
+            Set<Item> items = itemRepository.findByShop(s);
+            shopResponse.setTotalProduct(items.size());
+            responses.add(shopResponse);
         }
         return responses;
     }
 
-    public ShopResponse updateShop(ShopRequest request)
-    {
+    public ShopResponse updateShop(ShopRequest request)  {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         String login = userService.getUserID(authentication.getName());
         User user = userRepository.findById(login).orElseThrow(
@@ -168,12 +203,22 @@ public class ShopService {
             if(shopRepository.existsByTaxNumber(request.getTaxNumber()))
                 throw new AppException(ErrorCode.INVALID_TAX_NUMBER);
         shop.setTaxNumber(request.getTaxNumber());
-        shop.setPictures(imageMapper.toImage(request.getPictures()));
+
         shopRepository.save(shop);
-        Image image = imageMapper.toImage(request.getPictures());
-        ShopResponse response = shopMapper.toShopResponse(shopRepository.save(shop));
-        response.setPictures(imageMapper.toImageResponse(image));
-        return  response;
+
+        return shopMapper.toShopResponse(shopRepository.save(shop));
+    }
+
+    public String updateShopAvatar(MultipartFile file) throws IOException {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        String login = userService.getUserID(authentication.getName());
+        User user = userRepository.findById(login).orElseThrow(
+                ()-> new AppException(ErrorCode.USER_NOT_EXISTED));
+        Shop shop = shopRepository.findByUsername(user.getUsername()).orElseThrow(
+                ()-> new AppException(ErrorCode.SHOP_NOT_CREATED));
+        shop.setPictures(ImageUtils.compressImage(file.getBytes()));
+        shopRepository.save(shop);
+        return "Updated Shop avatar";
     }
 
 

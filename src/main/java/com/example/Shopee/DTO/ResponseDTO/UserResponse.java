@@ -4,6 +4,7 @@ import com.example.Shopee.Entity.Cart;
 import com.example.Shopee.Entity.Role;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -21,8 +22,8 @@ public class UserResponse {
     LocalDate dob;
     Set<Role> roles;
     String email;
+    String gender;
     String phone;
-    ImageResponse pictures;
-    Cart cart;
+    CartResponse cart;
     Set<AddressResponse> addressResponses;
 }

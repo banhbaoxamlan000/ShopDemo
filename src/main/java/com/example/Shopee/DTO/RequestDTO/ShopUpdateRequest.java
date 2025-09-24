@@ -18,5 +18,4 @@ public class ShopUpdateRequest {
     String phone;
     String taxNumber;
     String business;
-    ImageRequest pictures;
 }

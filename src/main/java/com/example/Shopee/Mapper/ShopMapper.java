@@ -13,7 +13,6 @@ public interface ShopMapper {
 
 
     @Mapping(target = "shopName", source = "shopName")
-    @Mapping(target = "pictures", ignore = true)
     @Mapping(target = "rate", source = "rate")
     @Mapping(target = "ratings", source = "ratings")
     @Mapping(target = "followers", source = "followers")

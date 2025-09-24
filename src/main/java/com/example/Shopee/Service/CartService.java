@@ -9,6 +9,7 @@ import com.example.Shopee.Exception.ErrorCode;
 import com.example.Shopee.Mapper.AttributeMapper;
 import com.example.Shopee.Mapper.ImageMapper;
 import com.example.Shopee.Repository.*;
+import com.example.Shopee.Utils.ImageUtils;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -29,10 +30,30 @@ public class CartService {
     UserRepository userRepository;
     ItemRepository itemRepository;
     VariantRepository variantRepository;
-    UserService userService;
     CartItemRepository cartItemRepository;
     ImageMapper imageMapper;
     AttributeMapper attributeMapper;
+    ImageRepository imageRepository;
+
+    String getUserID(String login)
+    {
+        if(userRepository.existsByUsername(login)) {
+            User result = userRepository.findByUsername(login).orElseThrow(
+                    () -> new AppException(ErrorCode.USER_NOT_EXISTED));
+            return result.getUserID();
+        }
+        if(userRepository.existsByPhone(login)) {
+            User result = userRepository.findByPhone(login).orElseThrow(
+                    () -> new AppException(ErrorCode.USER_NOT_EXISTED));
+            return result.getUserID();
+        }
+        if(userRepository.existsByEmail(login)) {
+            User result = userRepository.findByEmail(login).orElseThrow(
+                    () -> new AppException(ErrorCode.USER_NOT_EXISTED));
+            return result.getUserID();
+        }
+        throw new AppException(ErrorCode.USER_NOT_EXISTED);
+    }
 
     public void createCart(String userID)
     {
@@ -72,7 +93,7 @@ public class CartService {
         }
         cartItem.setQuantity(request.getQuantity());
 
-        Cart cart = cartRepository.findById(userService.getUserID(login)).orElseThrow(()-> new AppException(ErrorCode.CART_NOT_EXISTED));
+        Cart cart = cartRepository.findById(getUserID(login)).orElseThrow(()-> new AppException(ErrorCode.CART_NOT_EXISTED));
         Set<CartItem> cartItemSet = cartItemRepository.findByCart(cart);
         cartItem.setCart(cart);
         CartItem existedItem = cartItemSet.stream()
@@ -95,13 +116,13 @@ public class CartService {
 
         Set<VariantResponse> variantResponses = new HashSet<>();
 
-        ImageResponse imageResponse = imageMapper.toImageResponse(cartItem.getItem().getPictures().getFirst());
+
         VariantResponse v = VariantResponse.builder()
                     .shopName(item.getShop().getShopName())
                     .itemName(cartItem.getItem().getName())
                     .quantity(cartItem.getQuantity())
                     .price(cartItem.getPrice())
-                    .pictures(imageResponse)
+                    .itemID(cartItem.getItem().getItemID())
                     .SKU(sku.toString())
                     .build();
         if(cartItem.getVariant() != null)
@@ -112,7 +133,9 @@ public class CartService {
                 attributeResponses.add(attributeMapper.toAttributeResponse(a));
             }
             v.setAttributes(attributeResponses);
+            v.setVariantID(cartItem.getVariant().getVariantID());
         }
+
         variantResponses.add(v);
 
         return CartItemResponse.builder()
@@ -121,21 +144,18 @@ public class CartService {
                 .build();
     }
 
+
     public CartResponse updateCart(CartItemUpdateRequest cartItemID)
     {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         String login = authentication.getName();
-        Cart cart = cartRepository.findById(userService.getUserID(login))
+        Cart cart = cartRepository.findById(getUserID(login))
                 .orElseThrow(()-> new AppException(ErrorCode.CART_NOT_EXISTED));
         Set<CartItem> cartItemSet = cartItemRepository.findByCart(cart);
         CartItem cartItem = cartItemRepository.findById(cartItemID.getCartItemID())
                 .orElseThrow(()-> new AppException(ErrorCode.ITEM_NOT_EXISTED));
         if(cartItemSet.contains(cartItem))
         {
-            if (cartItem.getItem().getQuantity() < cartItemID.getQuantity())
-            {
-                throw new AppException(ErrorCode.LACK_OF_QUANTITY);
-            }
             cartItem.setQuantity(cartItemID.getQuantity());
             cartItemRepository.save(cartItem);
             return getCart();
@@ -148,18 +168,19 @@ public class CartService {
     {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         String login = authentication.getName();
-        Cart cart = cartRepository.findById(userService.getUserID(login)).orElseThrow(()-> new AppException(ErrorCode.CART_NOT_EXISTED));
+        Cart cart = cartRepository.findById(getUserID(login)).orElseThrow(()-> new AppException(ErrorCode.CART_NOT_EXISTED));
         Set<CartItem> cartItemSet = cartItemRepository.findByCart(cart);
         Set<VariantResponse> variantResponses = new HashSet<>();
         for(CartItem ct : cartItemSet)
         {
-            ImageResponse imageResponse = imageMapper.toImageResponse(ct.getItem().getPictures().getFirst());
             VariantResponse v = VariantResponse.builder()
+                    .cartItemID(ct.getCartItemID())
                     .itemName(ct.getItem().getName())
                     .shopName(ct.getItem().getShop().getShopName())
                     .quantity(ct.getQuantity())
                     .price(ct.getPrice())
-                    .pictures(imageResponse)
+                    .shopID(ct.getItem().getShop().getShopID())
+                    .itemID(ct.getItem().getItemID())
                     .build();
             if(ct.getVariant() != null)
             {
@@ -170,6 +191,7 @@ public class CartService {
                 }
                 v.setSKU(ct.getVariant().getSKU());
                 v.setAttributes(attributeResponses);
+                v.setVariantID(ct.getVariant().getVariantID());
             }
             variantResponses.add(v);
         }
@@ -190,7 +212,7 @@ public class CartService {
         CartItem c = cartItemRepository.findById(cartItemID).orElseThrow(() -> new AppException(ErrorCode.ITEM_NOT_IN_CART));
         Cart cart = c.getCart();
         var authentication = SecurityContextHolder.getContext().getAuthentication();
-        String userID = userService.getUserID(authentication.getName());
+        String userID = getUserID(authentication.getName());
         if(!c.getCart().getCartID().equals(userID))
         {
             throw new AppException(ErrorCode.NON_OWNERSHIP);

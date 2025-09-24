@@ -44,7 +44,7 @@ public class Shop {
 
     String business;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinColumn(name = "pictures")
-    Image pictures;
+    @Lob
+    @Column(columnDefinition = "LONGBLOB")
+    byte[] pictures;
 }

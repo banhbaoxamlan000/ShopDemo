@@ -110,11 +110,14 @@ public class OrderService {
         ItemOrderedResponse itemOrderedResponse = ItemOrderedResponse.builder()
                 .quantity(request.getQuantity())
                 .price(item.getPrice())
+                .isReview(orderItem.isReview())
                 .itemName(item.getName())
                 .attributes(null)
+                .itemID(item.getItemID())
                 .build();
         itemOrderedResponses.add(itemOrderedResponse);
         return OrderResponse.builder()
+                .orderID(orders.getOrderID())
                 .items(itemOrderedResponses)
                 .shopName(item.getShop().getShopName())
                 .total(orders.getTotal())
@@ -206,9 +209,12 @@ public class OrderService {
                 .attributes(aR)
                 .price(variant.getPrice())
                 .quantity(request.getQuantity())
+                .isReview(orderItem.isReview())
+                .itemID(item.getItemID())
                 .build();
         itemOrderedResponses.add(itemOrderedResponse);
         return OrderResponse.builder()
+                .orderID(orders.getOrderID())
                 .shopName(item.getShop().getShopName())
                 .items(itemOrderedResponses)
                 .total(orders.getTotal())
@@ -238,6 +244,8 @@ public class OrderService {
         }
 
         String status = Status.getStatusByCode(request.getStatusCode());
+
+
         OrderStatus orderStatus = OrderStatus.builder()
                 .orders(order)
                 .status(status)
@@ -260,12 +268,24 @@ public class OrderService {
             ItemOrderedResponse itemOrderedResponse = ItemOrderedResponse.builder()
                     .price(oi.getPrice())
                     .quantity(oi.getQuantity())
+                    .isReview(oi.isReview())
                     .attributes(aR)
                     .itemName(oi.getItems().getName())
                     .build();
             itemOrderedResponses.add(itemOrderedResponse);
         }
+        if(request.getStatusCode()==4)
+        {
+            Set<OrderItem> items = order.getOrderItems();
+            for(OrderItem oi : items)
+            {
+                Item item = oi.getItems();
+                item.setQuantity(item.getQuantity() + oi.getQuantity());
+                itemRepository.save(item);
+            }
+        }
         return OrderResponse.builder()
+                .orderID(order.getOrderID())
                 .shopName(order.getShop().getShopName())
                 .date(orderStatus.getDate())
                 .total(order.getTotal())
@@ -353,8 +373,10 @@ public class OrderService {
                 ItemOrderedResponse itemOrderedResponse = ItemOrderedResponse.builder()
                         .itemName(ct.getItem().getName())
                         .attributes(aR)
+                        .isReview(orderItem.isReview())
                         .quantity(ct.getQuantity())
                         .price(ct.getPrice())
+                        .itemID(ct.getItem().getItemID())
                         .build();
                 itemOrderedResponses.add(itemOrderedResponse);
             }
@@ -385,6 +407,7 @@ public class OrderService {
             order.setOrderStatus(statusSet);
             order.setCurrentStatus(orderStatus.getStatus());
             OrderResponse orderResponse = OrderResponse.builder()
+                    .orderID(order.getOrderID())
                     .orderStatus(Status.TO_SHIP.getStatus())
                     .shopName(entry.getKey().getShopName())
                     .items(itemOrderedResponses)
@@ -428,10 +451,12 @@ public class OrderService {
                                 .price(oi.getPrice())
                                 .quantity(oi.getQuantity())
                                 .itemName(oi.getItems().getName())
+                                .itemID(oi.getItems().getItemID())
                                 .attributes(attributeResponses)
                         .build());
             }
             OrderResponse orderResponse = OrderResponse.builder()
+                    .orderID(o.getOrderID())
                     .shopName(shop.getShopName())
                     .delivery(o.getDelivery())
                     .addressResponse(addressMapper.toAddressResponse(o.getAddress()))
@@ -458,6 +483,13 @@ public class OrderService {
             Set<ItemOrderedResponse> iOR = new HashSet<>();
             for(OrderItem oi : o.getOrderItems())
             {
+                ItemOrderedResponse itemOrderedResponse = ItemOrderedResponse.builder()
+                        .itemID(oi.getItems().getItemID())
+                        .price(oi.getPrice())
+                        .quantity(oi.getQuantity())
+                        .isReview(oi.isReview())
+                        .itemName(oi.getItems().getName())
+                        .build();
                 Set<AttributeResponse> attributeResponses = new HashSet<>();
                 if(oi.getVariants()!= null && !oi.getVariants().getAttribute().isEmpty())
                 {
@@ -465,17 +497,15 @@ public class OrderService {
                     {
                         attributeResponses.add(attributeMapper.toAttributeResponse(a));
                     }
+                    itemOrderedResponse.setPrice(oi.getVariants().getPrice());
                 }
 
-                iOR.add(ItemOrderedResponse.builder()
-                        .price(oi.getPrice())
-                        .quantity(oi.getQuantity())
-                        .itemName(oi.getItems().getName())
-                        .attributes(attributeResponses)
-                        .build());
+                itemOrderedResponse.setAttributes(attributeResponses);
+                iOR.add(itemOrderedResponse);
             }
             OrderResponse orderResponse = OrderResponse.builder()
                     .shopName(o.getShop().getShopName())
+                    .orderID(o.getOrderID())
                     .delivery(o.getDelivery())
                     .addressResponse(addressMapper.toAddressResponse(o.getAddress()))
                     .total(o.getTotal())

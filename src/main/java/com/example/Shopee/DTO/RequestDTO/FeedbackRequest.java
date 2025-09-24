@@ -12,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class FeedbackRequest {
-    Integer orderItemID;
+    Integer itemID;
     String feedback;
     List<ImageRequest> imageRequests;
     @Size(min = 1, max = 5)

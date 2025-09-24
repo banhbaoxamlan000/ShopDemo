@@ -13,6 +13,7 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ItemDetailResponse {
     ItemResponse item;
+    Set<VariantAttributeResponse> variantResponses;
     ShopResponse shop;
     Set<ReviewResponse> reviewResponseSet;
 }

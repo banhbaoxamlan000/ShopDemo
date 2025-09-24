@@ -7,10 +7,7 @@ import com.example.Shopee.Service.ReviewService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
 
@@ -26,6 +23,14 @@ public class ReviewController {
     {
         return ApiResponse.<Set<ReviewResponse>>builder()
                 .result(reviewService.writeFeedback(request))
+                .build();
+    }
+
+    @GetMapping("/{itemID}")
+    ApiResponse<Set<ReviewResponse>> getReview(@PathVariable("itemID") Integer itemID)
+    {
+        return ApiResponse.<Set<ReviewResponse>>builder()
+                .result(reviewService.getFeedback(itemID))
                 .build();
     }
 }

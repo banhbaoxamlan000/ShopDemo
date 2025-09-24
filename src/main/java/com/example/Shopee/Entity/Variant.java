@@ -13,10 +13,12 @@ import java.util.Set;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Variant{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     Integer variantID;
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
@@ -24,9 +26,11 @@ public class Variant{
 
     Integer quantity;
     Double price;
+
+    @EqualsAndHashCode.Include
     String SKU;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "pictures")
+    @OneToOne( mappedBy = "variant")
+    @ToString.Exclude
     Image pictures;
 }

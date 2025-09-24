@@ -13,9 +13,9 @@ import lombok.experimental.FieldDefaults;
 public class ShopResponse {
     String shopID;
     String shopName;
-    ImageResponse pictures;
     double rate;
     int ratings ;
     int followers ;
     int totalProduct;
+
 }

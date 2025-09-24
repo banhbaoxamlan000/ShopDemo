@@ -6,7 +6,8 @@ import lombok.experimental.FieldDefaults;
 
 import java.util.Set;
 
-@Data
+@Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -14,4 +15,5 @@ import java.util.Set;
 public class ShopDetailResponse {
     ShopResponse shopResponse;
     Set<SearchItemResponse> items;
+
 }

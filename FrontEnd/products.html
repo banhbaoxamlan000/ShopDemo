@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Products | HS Mall</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Header Profile & Logo -->
+    <header class="shadow-sm sticky top-0 z-50" style="background: linear-gradient(90deg, #e0e7ff 0%, #c7d2fe 50%, #fbc2eb 100%); box-shadow: 0 4px 24px 0 rgba(124, 58, 237, 0.08);">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-2 flex items-center relative" style="align-items: center;">
+            <div class="flex flex-col items-start mr-8">
+                <a href="shop-dashboard.html" class="mb-2 px-4 py-2 rounded-md bg-gradient-to-r from-blue-500 to-blue-300 text-white font-semibold shadow hover:from-blue-600 hover:to-blue-400 transition text-base" style="margin-bottom: 0; align-self: flex-start;">Seller Page</a>
+                <a href="index.html" class="text-7xl font-extrabold bg-clip-text text-transparent" style="background-image: linear-gradient(90deg, #FFB347 0%, #FF69B4 100%); line-height: 1.1;">HS Mall</a>
+            </div>
+            <div class="flex-1 flex items-center">
+                <form id="searchForm" class="relative w-full max-w-xl mx-auto flex items-center" style="align-items: center; display: flex;">
+                    <input id="searchInput" type="text" placeholder="Search products..." class="pl-10 pr-4 py-2 border rounded-full w-full focus:outline-none focus:ring-2 focus:ring-indigo-500" style="margin-top: 0; margin-bottom: 0;" />
+                    <button type="submit" class="absolute left-3 top-2.5 text-gray-400" style="top: 50%; transform: translateY(-50%); background: none; border: none; padding: 0; cursor: pointer;">
+                        <i data-feather="search"></i>
+                    </button>
+                </form>
+            </div>
+            <div class="flex items-center space-x-4 ml-0">
+                <div class="relative group" id="cartDropdown" style="display: flex; align-items: center; margin-left: 8px; margin-right: 0;">
+                    <a href="#" id="cartIcon" class="text-gray-600 hover:text-indigo-600" style="display: flex; align-items: center; position: relative;"><i data-feather="shopping-cart" class="w-8 h-8"></i></a>
+                    <div id="cartMenu" class="hidden absolute left-1/2 transform -translate-x-1/2 top-full mt-3 w-72 bg-white rounded-md shadow-lg z-20" style="min-width: 18rem;">
+                        <div class="p-4">
+                            <h4 class="font-medium text-gray-800">Your Cart</h4>
+                            <div id="cartItems" class="mt-2 space-y-2"></div>
+                            <div id="cartTotal" class="mt-4 flex justify-between items-center"></div>
+                            <a href="cart.html" id="viewCartBtn" class="block mt-4 px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 text-center">View Cart</a>
+                        </div>
+                    </div>
+                </div>
+                <div id="header-profile" class="flex items-center space-x-4">
+                    <!-- Avatar or Login/Signup will be injected by JS -->
+                </div>
+            </div>
+        </div>
+        <style>
+            #header-profile { min-width: 120px; justify-content: flex-end; }
+            #header-profile .dropdown-menu {
+                position: absolute;
+                right: 0;
+                top: 60px;
+                width: 160px;
+                background: white;
+                border-radius: 0.5rem;
+                box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+                z-index: 100;
+                display: none;
+            }
+            #header-profile .dropdown-menu.show {
+                display: block;
+            }
+        </style>
+    </header>
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <div class="flex gap-8 items-start">
+            <div id="filterBar" class="w-full max-w-xs">
+                <div id="categorySidebar" class="mb-6">
+                    <!-- Category detail sidebar will be rendered here by JS -->
+                </div>
+                <!-- Filter buttons will be rendered here -->
+            </div>
+            <div class="flex-1 flex flex-col">
+                <!-- Khu vực hiển thị thông tin shop khi tìm kiếm -->
+                <div id="shopBar" class="mb-6"></div>
+                <div id="productsGrid" class="grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    <!-- Products will be rendered here by JS -->
+                    <div id="search-results"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script src="products.js"></script>
+    <script src="search-category.js"></script>
+    <script src="search.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.feather) feather.replace();
+            // Tích hợp filterBar
+            if (typeof renderFilterBar === 'function') {
+                renderFilterBar('filterBar', {
+                    onFilter: function(filterData) {
+                        // Bạn có thể xử lý filterData ở đây, ví dụ gọi fetchProducts(filterData)
+                        // Hoặc reload lại sản phẩm theo filter
+                    }
+                });
+            }
+        });
+    </script>
+
+</body>
+</html>

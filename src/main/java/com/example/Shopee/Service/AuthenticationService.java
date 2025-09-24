@@ -94,7 +94,6 @@ public class AuthenticationService {
                 ))
                 .jwtID(UUID.randomUUID().toString())
                 .claim("scope", buildScope(user))
-                .claim("active", user.getActive())
                 .build();
 
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
@@ -146,17 +145,7 @@ public class AuthenticationService {
 
         var verified = signedJWT.verify(verifier);
 
-        if(verified)
-        {
-            var claimSet = signedJWT.getJWTClaimsSet();
-            if(claimSet.getBooleanClaim("active") != null)
-            {
-                if(claimSet.getBooleanClaim("active"))
-                {
-                    throw new AppException(ErrorCode.BANNED);
-                }
-            }
-        }
+
 
         if(!verified && expiryTime.after(new Date()))
             throw new AppException(ErrorCode.UNAUTHENTICATED);
@@ -183,9 +172,9 @@ public class AuthenticationService {
                 .build();
     }
 
-    public void logout(LogoutRequest request) throws ParseException, JOSEException {
+    public void logout(String request) throws ParseException, JOSEException {
         try{
-            var signedToken = verifyToken(request.getToken(), true);
+            var signedToken = verifyToken(request, true);
             String jId = signedToken.getJWTClaimsSet().getJWTID();
             Date expiryTime = signedToken.getJWTClaimsSet().getExpirationTime();
             InvalidatedToken invalidatedToken = InvalidatedToken.builder()
@@ -221,7 +210,6 @@ public class AuthenticationService {
 
         return AuthenticationResponse
                 .builder().token(token)
-                .authentication(true)
                 .build();
     }
 

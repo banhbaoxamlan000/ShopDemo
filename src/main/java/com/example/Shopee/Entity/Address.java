@@ -25,6 +25,10 @@ public class Address {
     String district;
     String ward;
     String detail;
+
+    @Column(columnDefinition = "boolean default true")
+    boolean active;
+
     @Column(name = "defaultAddress", columnDefinition = "boolean default false")
     boolean defaultAddress;
 

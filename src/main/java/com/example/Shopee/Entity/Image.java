@@ -13,12 +13,14 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @Data
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Image {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Integer id;
+    String id;
 
-    String url;
+    @Lob
+    @Column(columnDefinition = "LONGBLOB")
+    byte[] url;
 
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -26,4 +28,13 @@ public class Image {
     @ToString.Exclude
     Item item;
 
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "variantID")
+    @ToString.Exclude
+    Variant variant;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reviewID")
+    @ToString.Exclude
+    Review review;
 }

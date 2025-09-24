@@ -22,9 +22,14 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.extern.slf4j.XSlf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Set;
@@ -55,8 +60,7 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    ApiResponse<UserResponse> register(@Valid @RequestBody UserRegistration request)
-    {
+    ApiResponse<UserResponse> register(@Valid @RequestBody UserRegistration request) throws IOException {
         return ApiResponse.<UserResponse>builder()
                 .result(userService.userRegistration(request))
                 .build();
@@ -79,12 +83,15 @@ public class UserController {
                 .result(userService.getMyInfo()).build();
     }
 
+
+
     @PostMapping("/update")
     ApiResponse<UserResponse> updateUser(@RequestBody UserUpdateRequest request)
     {
         return ApiResponse.<UserResponse>builder()
                 .result(userService.updateUser(request)).build();
     }
+
 
     @DeleteMapping("/{userID}")
     ApiResponse<String> deleteUser(@PathVariable("userID") String userID)
@@ -105,6 +112,14 @@ public class UserController {
                 .build();
     }
 
+    @GetMapping("/addresses")
+    ApiResponse<Set<AddressResponse>> getAddress()
+    {
+        return ApiResponse.<Set<AddressResponse>>builder()
+                .result(addressService.getAddresses())
+                .build();
+    }
+
     @PostMapping("/addresses")
     ApiResponse<AddressResponse> addAddress(@Valid @RequestBody AddressRequest request)
     {
@@ -113,7 +128,16 @@ public class UserController {
                 .build();
     }
 
-    @DeleteMapping("/delete/address/{id}")
+    @PutMapping("/addresses/{id}")
+    ApiResponse<String> setDefaultAddress(@PathVariable("id") Integer id)
+    {
+        addressService.setDefaultAddress(id);
+        return ApiResponse.<String>builder()
+                .result("Changed default address")
+                .build();
+    }
+
+    @DeleteMapping("/addresses/{id}")
     ApiResponse<String> deleteAddress(@PathVariable("id") Integer id)
     {
         addressService.deleteAddress(id);
@@ -131,9 +155,12 @@ public class UserController {
     }
 
     @PutMapping("/reset-password")
-    void reset(@RequestBody ResetPasswordRequest request)
+    ApiResponse<String> reset(@RequestBody ResetPasswordRequest request)
     {
         userService.reset(request);
+        return ApiResponse.<String>builder()
+                .result("Sent code")
+                .build();
     }
 
 
@@ -151,4 +178,5 @@ public class UserController {
                 .result(userService.resetPassword(request))
                 .build();
     }
+
 }

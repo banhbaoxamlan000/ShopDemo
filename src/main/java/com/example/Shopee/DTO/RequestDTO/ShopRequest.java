@@ -22,5 +22,4 @@ public class ShopRequest {
     String phone;
     String taxNumber;
     String business;
-    ImageRequest pictures;
 }

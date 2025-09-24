@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seller Dashboard | Product Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        .sidebar {
+            transition: all 0.3s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .active-tab {
+            border-bottom: 3px solid #4f46e5;
+            color: #4f46e5;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="sidebar bg-white w-64 border-r border-gray-200 flex flex-col">
+            <div class="p-4 border-b border-gray-200">
+                <a href="index.html" class="mb-2 px-8 py-4 rounded-md font-extrabold transition text-4xl bg-clip-text text-transparent" style="background-image: linear-gradient(90deg, #FFB347 0%, #FF69B4 100%); margin-bottom: 0; align-self: flex-start; letter-spacing:2px;">HS Mall</a>
+            </div>
+            <nav class="flex-1 overflow-y-auto">
+                <div class="p-4">
+                    <div class="flex items-center space-x-3 p-3 rounded-lg bg-indigo-50 text-indigo-600">
+                        <i data-feather="home"></i>
+                        <span>Dashboard</span>
+                    </div>
+                    <div class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 text-gray-700 mt-2">
+                        <i data-feather="shopping-bag"></i>
+                        <span>Products</span>
+                    </div>
+                    <div class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 text-gray-700 mt-2">
+                        <i data-feather="dollar-sign"></i>
+                        <span>Orders</span>
+                    </div>
+                </div>
+            </nav>
+            <div class="p-4 border-t border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <img class="w-10 h-10 rounded-full" alt="Shop Avatar" id="shopAvatarSidebar">
+                    <div>
+                        <p class="font-medium" id="shopNameSidebar"></p>
+                        <p class="text-sm text-gray-500" id="shopTypeSidebar"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-y-auto">
+            <!-- Header -->
+            <header class="bg-white shadow-sm p-4 flex justify-between items-center">
+                <h2 class="text-2xl font-semibold text-gray-800">Product Management</h2>
+                <!-- Search and Add Product buttons temporarily removed -->
+            </header>
+
+            <!-- Content -->
+            <main class="p-6">
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <div class="flex justify-between">
+                            <div>
+                                <p class="text-gray-500">Total Products</p>
+                                <h3 id="totalProductsCount" class="text-2xl font-bold mt-1">0</h3>
+                            </div>
+                            <div class="bg-indigo-100 p-3 rounded-lg">
+                                <i data-feather="box" class="text-indigo-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <div class="flex justify-between">
+                            <div>
+                                <p class="text-gray-500">Active Products</p>
+                                <h3 id="activeProductsCount" class="text-2xl font-bold mt-1">0</h3>
+                            </div>
+                            <div class="bg-green-100 p-3 rounded-lg">
+                                <i data-feather="check-circle" class="text-green-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="bg-white rounded-xl shadow-sm mb-6">
+                    <div class="border-b border-gray-200">
+                        <nav class="flex -mb-px">
+                            <a href="#" class="py-4 px-6 text-center border-b-2 font-medium text-sm active-tab">
+                                All Products
+                            </a>
+                            <a href="#" class="py-4 px-6 text-center border-b-2 font-medium text-sm text-gray-500 hover:text-indigo-600">
+                                Active
+                            </a>
+                            <a href="#" class="py-4 px-6 text-center border-b-2 font-medium text-sm text-gray-500 hover:text-indigo-600">
+                                Drafts
+                            </a>
+                            <a href="#" class="py-4 px-6 text-center border-b-2 font-medium text-sm text-gray-500 hover:text-indigo-600">
+                                Out of Stock
+                            </a>
+                        </nav>
+                    </div>
+                </div>
+
+                <!-- Products Table -->
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden" id="productsTable">
+                    <div id="productsList" class="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
+                        <div class="col-span-full text-center py-8">
+                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                            <p class="text-gray-500 mt-2">Loading products...</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="shop-dashboard.js"></script>
+</body>
+</html>

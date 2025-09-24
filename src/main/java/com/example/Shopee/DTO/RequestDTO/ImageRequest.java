@@ -11,5 +11,5 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ImageRequest {
-    String url;
+    String pictureID;
 }

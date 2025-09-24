@@ -11,6 +11,7 @@ import com.example.Shopee.Mapper.AddressMapper;
 import com.example.Shopee.Mapper.ImageMapper;
 import com.example.Shopee.Mapper.UserMapper;
 import com.example.Shopee.Repository.*;
+import com.example.Shopee.Utils.ImageUtils;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.SignedJWT;
 import jakarta.transaction.Transactional;
@@ -20,7 +21,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.*;
 import java.util.function.Predicate;
@@ -41,6 +44,9 @@ public class UserService {
     ImageMapper imageMapper;
     MailService mailService;
     PendingUserRepository pendingUserRepository;
+    AddressRepository addressRepository;
+    AddressMapper addressMapper;
+    CartService cartService;
 
     public String getUserID(String login)
     {
@@ -76,8 +82,10 @@ public class UserService {
     {
         PendingUser pendingUser = pendingUserRepository.findByEmail(request.getEmail())
                 .orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED));
+        pendingUser.isVerified();
         if(!pendingUser.isVerified())
         {
+            boolean abc = request.getCode().equals(pendingUser.getCode());
             if(request.getCode().equals(pendingUser.getCode()))
             {
                 User user = userMapper.toUser(pendingUser);
@@ -86,13 +94,12 @@ public class UserService {
                 Set<Role> roles= new HashSet<>();
                 roleRepository.findById(PredefinedRole.USER_ROLE.getRole()).ifPresent(roles::add);
                 user.setRoles(roles);
-
-                user.setPictures(pendingUser.getPictures());
+    
 
                 UserResponse result = userMapper.toUserResponse(userRepository.save(user));
                 pendingUser.setVerified(true);
                 pendingUserRepository.save(pendingUser);
-                result.setPictures(imageMapper.toImageResponse(pendingUser.getPictures()));
+
 
                 return result;
             }
@@ -101,29 +108,24 @@ public class UserService {
         throw new AppException(ErrorCode.USER_EXISTED);
     }
 
-    public UserResponse userRegistration(UserRegistration request)
-    {
-        if(pendingUserRepository.existsByUsername(request.getUsername()))
-            throw new AppException(ErrorCode.USERNAME_USED);
+    public UserResponse userRegistration(UserRegistration request) throws IOException {
 
-        if(pendingUserRepository.existsByEmail(request.getEmail()))
-            throw new AppException(ErrorCode.EMAIL_USED);
-
-        if(pendingUserRepository.existsByPhone(request.getPhone()))
-            throw new AppException(ErrorCode.PHONE_USED);
+        if(pendingUserRepository.existsByUsernameOrEmailOrPhone(request.getUsername(), request.getEmail(), request.getPhone())
+                && !userRepository.existsByUsername(request.getUsername()))
+        {
+            return null;
+        }
 
         PendingUser pendingUser = userMapper.toPendingUser(request);
 
         pendingUser.setCode(generateRandomNumber());
-        Image image = imageMapper.toImage(request.getPictures());
-        pendingUser.setPictures(image);
+        pendingUser.setGender(request.getGender());
         pendingUser.setPassword(passwordEncoder.encode(request.getPassword()));
         pendingUserRepository.save(pendingUser);
         mailService.sendMail(request.getEmail(), pendingUser.getCode());
-
         UserResponse result = userMapper.pendingUserToUserResponse(pendingUser);
         result.setUserID(pendingUser.getID().toString());
-        result.setPictures(imageMapper.toImageResponse(pendingUser.getPictures()));
+
         return result;
     }
 
@@ -148,8 +150,23 @@ public class UserService {
         User user = userRepository.findById(userID).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         if(!user.getActive())
             throw new AppException(ErrorCode.BANNED);
-        return userMapper.toUserResponse(user);
+        UserResponse userResponse = userMapper.toUserResponse(user);
+
+        Set<Role> roles = user.getRoles();
+        Set<AddressResponse> addressResponses = new HashSet<>();
+        for(Address a : addressRepository.findByUser(user))
+        {
+            addressResponses.add(addressMapper.toAddressResponse(a));
+        }
+        userResponse.setAddressResponses(addressResponses);
+
+        userResponse.setRoles(roles);
+
+        CartResponse cartResponse = cartService.getCart();
+        userResponse.setCart(cartResponse);
+        return userResponse;
     }
+
 
     public UserResponse updateUser(UserUpdateRequest request)
     {
@@ -165,16 +182,20 @@ public class UserService {
             {
                 throw new AppException(ErrorCode.EMAIL_USED);
             }
-
         }
         userMapper.updateUser(user, request);
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        Image image = imageMapper.toImage(request.getPictures());
-        user.setPictures(image);
 
-        UserResponse result = userMapper.toUserResponse(userRepository.save(user));
-        result.setPictures(imageMapper.toImageResponse(image));
-        return result;
+
+        return userMapper.toUserResponse(userRepository.save(user));
+    }
+
+    public String updateAvatar(MultipartFile file) throws IOException {
+        var authentication = SecurityContextHolder.getContext().getAuthentication().getName();
+        String userID = getUserID(authentication);
+        User user = userRepository.findById(userID).orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED));
+        user.setPictures(ImageUtils.compressImage(file.getBytes()));
+        userRepository.save(user);
+        return "Avatar changed";
     }
 
     public void banUser(String userID)
@@ -191,6 +212,10 @@ public class UserService {
         User user = userRepository.findById(userID)
                 .orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED));
 
+        if(!user.getActive())
+        {
+            throw new AppException(ErrorCode.BANNED);
+        }
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
 
@@ -202,7 +227,7 @@ public class UserService {
 
         return AuthenticationResponse.builder()
                 .token(token)
-                .authentication(true).build();
+                .build();
     }
 
     public boolean ownerShip(Item item)
@@ -245,7 +270,7 @@ public class UserService {
             var token = authenticationService.generateResetPasswordToken(request.getEmail());
             return AuthenticationResponse.builder()
                     .token(token)
-                    .authentication(true).build();
+                    .build();
         }
         throw new AppException(ErrorCode.INVALID_VERIFY_CODE);
     }

@@ -16,6 +16,9 @@ public interface UserMapper {
     @Mapping(target = "roles", ignore = true)
     User toUser(PendingUser pendingUser);
 
+
+    @Mapping(target = "roles", ignore = true)
+    @Mapping(target = "addressResponses", ignore = true)
     UserResponse toUserResponse(User user);
 
     @Mapping(target = "roles", ignore = true)

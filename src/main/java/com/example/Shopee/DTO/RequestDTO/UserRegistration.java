@@ -18,6 +18,7 @@ public class UserRegistration {
     String username;
     String firstName;
     String lastName;
+    String gender;
     @Size(min = 8, message = "PASSWORD_INVALID")
     String password;
     @DobConstraint(min = 13, message = "INVALID_DOB")
@@ -29,5 +30,4 @@ public class UserRegistration {
     @Size(min = 10, max = 10)
     String phone;
 
-    ImageRequest pictures;
 }

@@ -28,10 +28,8 @@ public class Review {
     User user;
 
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "shop_id")
+    @JoinColumn(name = "item_id")
     @ToString.Exclude
     Item item;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    List<Image> reviewImage;
 }

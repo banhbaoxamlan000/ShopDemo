@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -20,8 +21,13 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import javax.crypto.spec.SecretKeySpec;
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -31,7 +37,9 @@ public class SecurityConfig {
 
     private final String[] PUBLIC_ENDPOINTS = {"/users/register",
             "/auth/token", "/auth/introspect", "/auth/login", "/auth/logout", "/auth/refresh", "/shop/create", "/users/verify",
-            "/users/reset-password", "/users/reset-verify"};
+            "/users/reset-password", "/users/reset-verify", "/auth/check-username", "/auth/check-phone", "/auth/check-email",
+            "/auth/check-shop-email", "/auth/check-shop-phone", "/auth/check-business-number", "/item/coverImage/**", "/item/image/**",
+            "/category/**", "/shopee/main"};
 
     @Autowired
     private CustomJwtDecoder customJwtDecoder;
@@ -46,6 +54,8 @@ public class SecurityConfig {
                         .requestMatchers("/shopee/create").hasRole(PredefinedRole.SHOP_ROLE.getRole())
                         .requestMatchers("/shopee/delete").hasRole(PredefinedRole.SHOP_ROLE.getRole())
                         .requestMatchers("/shopee/**").hasRole(PredefinedRole.USER_ROLE.getRole())
+                        .requestMatchers("/item/**").hasRole(PredefinedRole.SHOP_ROLE.getRole())
+                        .requestMatchers("/variant/**").hasRole(PredefinedRole.USER_ROLE.getRole())
                         .requestMatchers( HttpMethod.POST,"/shop/**").hasRole(PredefinedRole.SHOP_ROLE.getRole())
                         .requestMatchers("/cart/**").hasRole(PredefinedRole.USER_ROLE.getRole())
                         .requestMatchers("/review/**").hasRole(PredefinedRole.USER_ROLE.getRole())
@@ -56,7 +66,9 @@ public class SecurityConfig {
                         .jwtAuthenticationConverter(jwtAuthenticationConverter()))
                         .authenticationEntryPoint(new JwtAuthenticationEntryPoint()));
 
-        httpSecurity.csrf(AbstractHttpConfigurer::disable);
+        httpSecurity.csrf(AbstractHttpConfigurer::disable)
+                .cors(Customizer.withDefaults());
+
 
         return httpSecurity.build();
     }
@@ -72,6 +84,20 @@ public class SecurityConfig {
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
         return jwtAuthenticationConverter;
     }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5501", "http://127.0.0.1:5501"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
 
     @Bean
     PasswordEncoder passwordEncoder()

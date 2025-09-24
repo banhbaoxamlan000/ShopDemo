@@ -15,18 +15,18 @@ spring:
     host: smtp.gmail.com
     port: 587
     username: chihuahua522861@gmail.com
-    password: ruax sxan dchc ujey
+    password: bcxh kugu rdab mohj
     properties:
       mail:
         smtp:
           auth: true
           starttls:
             enable: true
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 50MB
 
-logging:
-  level:
-    org.springframework.mail: DEBUG
-    javax.mail: DEBUG
 
 jwt:
   signerKey: "kaeyazqva8OoomPSUJeGlMKoP09zUqh6caZmiYDSfjxfMoI8WJpbiFxyQFP5PNeh"

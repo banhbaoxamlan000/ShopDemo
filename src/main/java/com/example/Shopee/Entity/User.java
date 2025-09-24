@@ -49,7 +49,7 @@ public class User {
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     Cart cart;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinColumn(name = "pictures")
-    Image pictures;
+    @Lob
+    @Column(columnDefinition = "LONGBLOB")
+    byte[] pictures;
 }

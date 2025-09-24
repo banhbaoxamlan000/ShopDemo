@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Shop | HS Mall</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body class="bg-gray-50">
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center pt-4 pb-2 relative">
+                <a href="index.html" class="text-5xl font-extrabold bg-clip-text text-transparent" style="background-image: linear-gradient(90deg, #FFB347 0%, #FF69B4 100%); line-height: 1.2;">HS Mall</a>
+            <div class="flex-1"></div>
+            <div id="header-profile" class="flex items-center space-x-4 absolute right-0 top-1"></div>
+        </div>
+    </header>
+
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-end h-16 items-center space-x-8">
+                <a href="shop.html" class="text-gray-600 hover:text-indigo-600"><i data-feather="store"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+            <div class="px-6 py-5 border-b border-gray-200">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Register Your Shop</h3>
+            </div>
+            <div class="px-6 py-5">
+                <form id="registerShopForm" class="space-y-6">
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div>
+                            <label for="shopName" class="block text-sm font-medium text-gray-700">Shop Name</label>
+                            <input type="text" name="shopName" id="shopName" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                            <input type="email" name="email" id="email" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            <span id="emailMsg" class="ml-2 text-sm"></span>
+                        </div>
+
+                        <div>
+                            <label for="phone" class="block text-sm font-medium text-gray-700">Phone</label>
+                            <input type="tel" name="phone" id="phone" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            <span id="phoneMsg" class="ml-2 text-sm"></span>
+                        </div>
+
+                        <div>
+                            <label for="taxNumber" class="block text-sm font-medium text-gray-700">Tax Number</label>
+                            <input type="text" name="taxNumber" id="taxNumber" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+
+                        <div>
+                            <label for="business" class="block text-sm font-medium text-gray-700">Business Type</label>
+                            <select id="business" name="business" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="household">Household Business</option>
+                                <option value="company">Company</option>
+                                <option value="individual">Individual Business</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="city" class="block text-sm font-medium text-gray-700">City/Province</label>
+                            <select name="city" id="city" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Select City/Province</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="district" class="block text-sm font-medium text-gray-700">District</label>
+                            <select name="district" id="district" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Select District</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="ward" class="block text-sm font-medium text-gray-700">Ward</label>
+                            <select name="ward" id="ward" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Select Ward</option>
+                            </select>
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label for="detail" class="block text-sm font-medium text-gray-700">Detail Address</label>
+                            <input type="text" name="detail" id="detail" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button type="submit" class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Register Shop
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-white">
+        <div class="max-w-7xl mx-auto py-12 px-4 overflow-hidden sm:px-6 lg:px-8">
+            <p class="mt-8 text-center text-base text-gray-400">
+                &copy; HS Mall. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <script src = "register-shop.js">
+    AOS.init();
+    feather.replace();
+    </script>
+</body>
+</html>

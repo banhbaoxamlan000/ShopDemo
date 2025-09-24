@@ -42,7 +42,11 @@ public enum ErrorCode {
     ALREADY_FOLLOW(1029, "You already follow this shop", HttpStatus.BAD_REQUEST),
     ALREADY_REVIEW(1030, "You already review this item", HttpStatus.BAD_REQUEST),
     OVERTIME_REVIEW(1031, "It's over 30 days since you bought this item", HttpStatus.BAD_REQUEST),
-    INVALID_VERIFY_CODE(1032, "Invalid verify code, try again", HttpStatus.BAD_REQUEST);
+    INVALID_VERIFY_CODE(1032, "Invalid verify code, try again", HttpStatus.BAD_REQUEST),
+    INVALID_NUMBER_IMAGES(1033, "Number of images and codes are different", HttpStatus.BAD_REQUEST),
+    IMAGE_NOT_EXIST(1034, "Image not existed", HttpStatus.BAD_REQUEST),
+    NON_ITEM(1035, "Shop doesn't have any items now", HttpStatus.BAD_REQUEST),
+    NOT_FOLLOW(1036, "You're not follow to unfollow", HttpStatus.BAD_REQUEST);
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

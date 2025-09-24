@@ -44,7 +44,4 @@ public class PendingUser {
     String gender;
 
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinColumn(name = "pictures")
-    Image pictures;
 }

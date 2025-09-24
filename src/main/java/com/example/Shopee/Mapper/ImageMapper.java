@@ -8,7 +8,7 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "Spring")
 public interface ImageMapper {
-    @Mapping(target = "url", source = "url")
+    @Mapping(target = "url", ignore = true)
     Image toImage(ImageRequest request);
 
     ImageResponse toImageResponse(Image image);

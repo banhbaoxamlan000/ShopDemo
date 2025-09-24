@@ -1,6 +1,7 @@
 package com.example.Shopee.DTO.RequestDTO;
 
 import com.example.Shopee.Entity.Attribute;
+import com.example.Shopee.Entity.Image;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -19,5 +20,5 @@ public class VariantRequest {
     @JsonProperty("SKU")
     String SKU;
     Set<Attribute> attribute;
-    ImageRequest pictures;
+    ImageRequest image;
 }

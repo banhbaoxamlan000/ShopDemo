@@ -27,6 +27,7 @@ public class Item {
     Double rate;
     Integer liked;
 
+
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "item")
     List<Image> pictures;
 

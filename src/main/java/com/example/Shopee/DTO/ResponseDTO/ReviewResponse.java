@@ -13,11 +13,11 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-public class    ReviewResponse {
+public class ReviewResponse {
+    List<String> pictureID;
     String username;
     String feedback;
     LocalDate date;
-    List<ImageResponse> imageResponses;
     @Size(min = 1, max = 5)
     Integer rate;
 }

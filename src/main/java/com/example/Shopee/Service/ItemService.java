@@ -7,6 +7,7 @@ import com.example.Shopee.Exception.AppException;
 import com.example.Shopee.Exception.ErrorCode;
 import com.example.Shopee.Mapper.*;
 import com.example.Shopee.Repository.*;
+import com.example.Shopee.Utils.ImageUtils;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -51,18 +52,19 @@ public class ItemService {
     {
         if (!variants.isEmpty())
         {
-            Set<Variant> result = new HashSet<>();
+            List<Variant> result = new ArrayList<>();
             for(VariantRequest v : variants)
             {
                 Variant variant = variantMapper.toVariant(v);
                 variant.setAttribute(v.getAttribute());
-
-                Image image = imageMapper.toImage(v.getPictures());
-                imageRepository.save(image);
+                Image image = Image.builder()
+                        .id(v.getImage().getPictureID())
+                        .variant(variant)
+                        .build();
                 variant.setPictures(image);
                 result.add(variantRepository.save(variant));
             }
-            return result;
+            return new HashSet<>(result);
         }
         return null;
     }
@@ -81,33 +83,55 @@ public class ItemService {
         Category category = categoryRepository.findByNameAndDetail(request.getCategory().getName(), request.getCategory().getDetail());
         Item item = itemMapper.toItem(request);
         item.setShop(shop);
-        Set<Variant> results = saveVariant(request.getVariants());
-        item.setVariants(results);
+        item.setCategory(category);
+        Set<Variant> result = new HashSet<>();
+        if (!request.getVariants().isEmpty()) {
+            for (VariantRequest v : request.getVariants()) {
+                Variant variant = variantMapper.toVariant(v);
+                variant.setAttribute(v.getAttribute());
+                Variant variant1 = variantRepository.save(variant);
+                Image image = Image.builder()
+                        .id(v.getImage().getPictureID())
+                        .variant(variant1)
+                        .build();
+                imageRepository.save(image);
+                Image image1 = imageRepository.findById(v.getImage().getPictureID()).orElseThrow(()-> new AppException(ErrorCode.IMAGE_NOT_EXIST));
+                variant.setPictures(image1);
+                result.add(variantRepository.save(variant));
+            }
+        }
+        item.setVariants(result);
+        itemRepository.save(item);
         if(!request.getVariants().isEmpty())
         {
             int quantity = 0;
-            for(Variant v : results)
+            for(Variant v : result)
             {
                 quantity += v.getQuantity();
             }
             item.setQuantity(quantity);
         }
         List<Image> images = new ArrayList<>();
-        List<ImageResponse> imageResponses = new ArrayList<>();
-        for(ImageRequest ir : request.getPictures())
+
+        for(ImageRequest imr : request.getPictures())
         {
-            Image img = imageMapper.toImage(ir);
-            images.add(img);
-            imageResponses.add(imageMapper.toImageResponse(img));
-            img.setItem(item);
-            imageRepository.save(img);
+            Image image = Image.builder()
+                    .id(imr.getPictureID())
+                    .item(item)
+                    .build();
+            imageRepository.save(image);
         }
 
-        item.setCategory(category);
+
         item.setPictures(images);
-        ItemResponse response = itemMapper.toItemResponse(itemRepository.save(item));
-        response.setPictures(imageResponses);
-        return response;
+        ItemResponse itemResponse = itemMapper.toItemResponse(itemRepository.save(item));
+        CategoryResponse categoryResponse = CategoryResponse.builder()
+                .name(category.getName())
+                .detail(category.getDetail())
+                .build();
+
+        itemResponse.setCategory(categoryResponse);
+        return itemResponse;
     }
 
     public ItemResponse updateItem(ItemUpdateRequest request)
@@ -135,6 +159,7 @@ public class ItemService {
         return itemMapper.toItemResponse(item);
     }
 
+    // chỉ lấy ra cover image của item
     public List<SearchItemResponse> searchItem(String request)
     {
         List<SearchItemResponse> responses = new ArrayList<>();
@@ -143,10 +168,21 @@ public class ItemService {
 
         for (Item i : results)
         {
-            responses.add(itemMapper.toSearchItemResponse(i));
+            SearchItemResponse searchItemResponse = itemMapper.toSearchItemResponse(i);
+//            ImageResponse imageResponse = ImageResponse.builder()
+//                    .url(ImageUtils.decompressImage(i.getPictures().getFirst().getUrl()))
+//                    .build();
+//            searchItemResponse.setImage(imageResponse);
+            searchItemResponse.setImageID(i.getPictures().getFirst().getId());
+            responses.add(searchItemResponse);
         }
 
         return responses;
+    }
+
+    public Set<SearchItemResponse> getItemSuggestion()
+    {
+        return new HashSet<>(searchItem(""));
     }
 
     public SearchResponse search(String search)
@@ -167,11 +203,17 @@ public class ItemService {
             throw new AppException(ErrorCode.NON_OWNERSHIP);
         }
         item.setCategory(null);
+        item.setShop(null);
         itemRepository.save(item);
+        Set<Variant> variants = item.getVariants();
+        variantRepository.deleteAll(variants);
+        List<Image> images = item.getPictures();
+        imageRepository.deleteAll(images);
         cartItemRepository.deleteByItem(item);
         itemRepository.deleteById(itemID);
     }
 
+    // chỉ lấy ra cover image của item
     public List<SearchItemResponse> searchByCate(CategoryRequest request)
     {
         if(!request.getDetail().equals(""))
@@ -183,7 +225,7 @@ public class ItemService {
             for(Item i : results)
             {
                 SearchItemResponse s = itemMapper.toSearchItemResponse(i);
-                s.setPictures(imageMapper.toImageResponse(i.getPictures().getFirst()));
+                s.setImageID(i.getPictures().getFirst().getId());
                 responseList.add(s);
             }
             return responseList;
@@ -200,12 +242,13 @@ public class ItemService {
         for(Item i : responses)
         {
             SearchItemResponse s = itemMapper.toSearchItemResponse(i);
-            s.setPictures(imageMapper.toImageResponse(i.getPictures().getFirst()));
+            s.setImageID(i.getPictures().getFirst().getId());
             responseList.add(s);
         }
         return responseList;
     }
 
+    // thông tin chi tiết của item
     public ItemDetailResponse getItemDetail(Integer id)
     {
         Item item = itemRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.ITEM_NOT_EXISTED));
@@ -215,55 +258,51 @@ public class ItemService {
 
         ItemDetailResponse itemDetailResponse = new ItemDetailResponse();
         ItemResponse itemResponse = itemMapper.toItemResponse(item);
-        List<ImageResponse> imageResponses = new ArrayList<>();
+        List<String> imageResponses = new ArrayList<>();
         for (Image i : item.getPictures())
         {
-            imageResponses.add(new ImageResponse(i.getUrl()));
+            imageResponses.add(i.getId());
         }
-        itemResponse.setPictures(imageResponses);
+        itemResponse.setImageID(imageResponses);
 
         Set<Variant> variants = item.getVariants();
-        Set<VariantResponse> variantResponses = new HashSet<>();
+        Set<AttributeResponse> attributeResponses = new HashSet<>();
+        Set<VariantAttributeResponse> variantResponses = new HashSet<>();
         for(Variant v : variants)
         {
-            VariantResponse vr = variantMapper.toVariantResponse(v);
-            vr.setPictures(new ImageResponse(v.getPictures().getUrl()));
-            Set<AttributeResponse> attributeResponses = new HashSet<>();
+            Set<String> attributeValue = new HashSet<>();
             for(Attribute a : v.getAttribute())
             {
                 attributeResponses.add(attributeMapper.toAttributeResponse(a));
+                attributeValue.add(a.getValue());
             }
-            vr.setAttributes(attributeResponses);
-            vr.setItemName(item.getName());
-            vr.setShopName(shop.getShopName());
-            variantResponses.add(vr);
+            VariantAttributeResponse variantResponse = new VariantAttributeResponse(v.getVariantID(), attributeValue, v.getPrice(), v.getQuantity());
+            variantResponses.add(variantResponse);
         }
 
         CategoryResponse categories = categoryMapper.toCategoryResponse(item.getCategory());
         itemResponse.setCategory(categories);
-        itemResponse.setVariants(variantResponses);
+        itemResponse.setAttributeResponses(attributeResponses);
+
+        itemDetailResponse.setVariantResponses(variantResponses);
 
         itemDetailResponse.setItem(itemResponse);
 
         ShopResponse shopResponse = shopMapper.toShopResponse(shop);
-        shopResponse.setPictures(new ImageResponse(shop.getPictures().getUrl()));
 
         itemDetailResponse.setShop(shopResponse);
+        Set<Item> items = itemRepository.findByShop(shop);
+        shopResponse.setTotalProduct(items.size());
         List<ReviewResponse> responses = new ArrayList<>();
         for(Review r : item.getReviews())
         {
-            System.out.println(r.getClass());
-            List<ImageResponse> imgResponse = new ArrayList<>();
-            for(Image i : r.getReviewImage())
-            {
-                imgResponse.add(imageMapper.toImageResponse(i));
-            }
-
+            List<String> pictures = imageRepository.findByReview(r).stream().map(Image::getId).toList();
             ReviewResponse rev = ReviewResponse.builder()
                     .rate(r.getRate())
+                    .pictureID(pictures)
+                    .date(r.getDate())
                     .username(r.getUser().getUsername())
                     .feedback(r.getFeedback())
-                    .imageResponses(imgResponse)
                     .build();
             responses.add(rev);
         }
@@ -311,7 +350,10 @@ public class ItemService {
         for(Item i : items)
         {
             SearchItemResponse s = itemMapper.toSearchItemResponse(i);
-            s.setPictures(imageMapper.toImageResponse(i.getPictures().getFirst()));
+//            ImageResponse imageResponse = ImageResponse.builder()
+//                    .url(ImageUtils.decompressImage(i.getPictures().getFirst().getUrl()))
+//                    .build();
+//            s.setImage(imageResponse);
             responses.add(s);
         }
         return responses;

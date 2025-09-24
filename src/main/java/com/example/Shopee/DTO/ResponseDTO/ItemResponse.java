@@ -1,8 +1,6 @@
 package com.example.Shopee.DTO.ResponseDTO;
 
 
-import com.example.Shopee.Entity.Category;
-import com.example.Shopee.Entity.Variant;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -21,7 +19,8 @@ public class ItemResponse {
     Integer quantity = 0;
     Double rate = 0.0;
     Integer liked = 0;
-    List<ImageResponse> pictures;
-    Set<VariantResponse> variants;
+    String description;
+    List<String> imageID;
+    Set<AttributeResponse> attributeResponses;
     CategoryResponse category;
 }

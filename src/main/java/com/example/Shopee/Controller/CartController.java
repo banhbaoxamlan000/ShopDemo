@@ -2,6 +2,7 @@ package com.example.Shopee.Controller;
 
 
 import com.example.Shopee.DTO.ApiResponse;
+import com.example.Shopee.DTO.RequestDTO.CartItemUpdateRequest;
 import com.example.Shopee.DTO.RequestDTO.CartRequest;
 import com.example.Shopee.DTO.ResponseDTO.CartResponse;
 import com.example.Shopee.DTO.ResponseDTO.CartItemResponse;
@@ -38,6 +39,14 @@ public class CartController {
     {
         return ApiResponse.<CartItemResponse>builder()
                 .result(cartService.addItem(itemID, request))
+                .build();
+    }
+
+    @PostMapping("/update")
+    ApiResponse<CartResponse> updateCartItem(@RequestBody CartItemUpdateRequest cartItemID)
+    {
+        return ApiResponse.<CartResponse>builder()
+                .result(cartService.updateCart(cartItemID))
                 .build();
     }
 

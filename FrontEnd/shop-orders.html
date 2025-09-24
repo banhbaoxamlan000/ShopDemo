@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HS Mall | Shop Orders</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        .sidebar { transition: all 0.3s ease; }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .active-tab { border-bottom: 3px solid #4f46e5; color: #4f46e5; }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => { if (window.feather) feather.replace(); });
+    </script>
+</head>
+<body class="bg-gray-50">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="sidebar bg-white w-64 border-r border-gray-200 flex flex-col">
+            <div class="p-4 border-b border-gray-200">
+                <a href="index.html" class="mb-2 px-8 py-4 rounded-md font-extrabold transition text-4xl bg-clip-text text-transparent" style="background-image: linear-gradient(90deg, #FFB347 0%, #FF69B4 100%); margin-bottom: 0; align-self: flex-start; letter-spacing:2px;">HS Mall</a>
+            </div>
+            <nav class="flex-1 overflow-y-auto">
+                <div class="p-4">
+                    <div class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 text-gray-700">
+                        <i data-feather="home"></i>
+                        <span>Dashboard</span>
+                    </div>
+                    <div class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 text-gray-700 mt-2">
+                        <i data-feather="shopping-bag"></i>
+                        <span>Products</span>
+                    </div>
+                    <div class="flex items-center space-x-3 p-3 rounded-lg bg-indigo-50 text-indigo-600 mt-2">
+                        <i data-feather="dollar-sign"></i>
+                        <span>Orders</span>
+                    </div>
+                </div>
+            </nav>
+            <div class="p-4 border-t border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <img class="w-10 h-10 rounded-full" alt="Shop Avatar" id="shopAvatarSidebar">
+                    <div>
+                        <p class="font-medium" id="shopNameSidebar"></p>
+                        <p class="text-sm text-gray-500" id="shopTypeSidebar"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-y-auto">
+            <!-- Header -->
+            <header class="bg-white shadow-sm p-4 flex justify-between items-center">
+                <h2 class="text-2xl font-semibold text-gray-800">Shop Orders</h2>
+            </header>
+
+            <!-- Content -->
+            <main class="p-6">
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div class="p-6">
+                        <div id="orderTabs" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-3">
+                            <button data-tab="ALL" class="order-tab h-10 rounded-full border bg-indigo-50 text-indigo-700 w-full">ALL</button>
+                            <button data-tab="TO SHIP" class="order-tab h-10 rounded-full border w-full">TO SHIP</button>
+                            <button data-tab="TO RECEIVE" class="order-tab h-10 rounded-full border w-full">TO RECEIVE</button>
+                            <button data-tab="COMPLETED" class="order-tab h-10 rounded-full border w-full">COMPLETED</button>
+                            <button data-tab="CANCELLED" class="order-tab h-10 rounded-full border w-full">CANCELLED</button>
+                            <button data-tab="RETURN REFUND" class="order-tab h-10 rounded-full border w-full">RETURN REFUND</button>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 justify-end mb-4">
+                            <label for="startDate" class="text-sm text-gray-600">From</label>
+                            <input type="date" id="startDate" class="px-2 py-1 border rounded-md text-sm">
+                            <label for="endDate" class="text-sm text-gray-600">to</label>
+                            <input type="date" id="endDate" class="px-2 py-1 border rounded-md text-sm">
+                            <button id="applyDateFilter" class="px-3 py-1.5 bg-indigo-600 text-white rounded-md text-sm hover:bg-indigo-700">Apply</button>
+                            <button id="clearDateFilter" class="px-3 py-1.5 bg-gray-500 text-white rounded-md text-sm hover:bg-gray-600">Clear</button>
+                        </div>
+                        <div id="ordersList" class="space-y-4"></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="shop-orders.js"></script>
+</body>
+</html>
+
+

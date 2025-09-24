@@ -15,6 +15,7 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderResponse {
     String shopName;
+    Integer orderID;
     Set<ItemOrderedResponse> items;
     Double total;
     String delivery;

@@ -13,10 +13,12 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -36,6 +38,7 @@ public class ItemController {
                 .build();
     }
 
+
     @PostMapping("/create")
     ApiResponse<ItemResponse> createItem(@RequestBody ItemRequest request)
     {
@@ -44,11 +47,20 @@ public class ItemController {
                 .build();
     }
 
+
     @GetMapping("/shop/{id}")
     ApiResponse<ShopDetailResponse> shopInfo(@PathVariable String id)
     {
         return ApiResponse.<ShopDetailResponse>builder()
                 .result(shopService.getShopInfo(id))
+                .build();
+    }
+
+    @GetMapping("/main")
+    ApiResponse<Set<SearchItemResponse>> getItemSuggestion()
+    {
+        return ApiResponse.<Set<SearchItemResponse>>builder()
+                .result(itemService.getItemSuggestion())
                 .build();
     }
 

@@ -20,6 +20,5 @@ public class ItemRequest {
     Set<VariantRequest> variants;
     CategoryRequest category;
     String description;
-
     List<ImageRequest> pictures;
 }

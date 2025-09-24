@@ -12,8 +12,10 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class ItemOrderedResponse {
+    Integer itemID;
     String itemName;
     Set<AttributeResponse> attributes;
     Double price;
     Integer quantity;
+    boolean isReview;
 }

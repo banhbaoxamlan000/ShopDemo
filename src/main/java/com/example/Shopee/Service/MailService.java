@@ -16,7 +16,7 @@ public class MailService {
     JavaMailSender javaMailSender;
 
     final String SUBJECT = "VERIFY EMAIL";
-    final String TEXT = " is your code to register, please don't share with anyone else";
+    final String TEXT = " is your code to verify email, please don't share with anyone else";
 
     @Async
     public void sendMail(String to, String code) {

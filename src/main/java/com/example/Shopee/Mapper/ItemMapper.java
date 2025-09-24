@@ -13,24 +13,28 @@ import org.springframework.stereotype.Component;
 
 @Mapper(componentModel = "Spring")
 public interface ItemMapper {
+    @Mapping(target = "pictures", ignore = true)
+    @Mapping(target = "variants", ignore = true)
     Item toItem(ItemRequest request);
 
-    @Mapping(target = "variants", ignore = true)
+//    @Mapping(target = "variants", ignore = true)
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "name", source = "name")
     @Mapping(target = "price", source = "price")
     @Mapping(target = "quantity", source = "quantity")
     @Mapping(target = "rate", source = "rate")
     @Mapping(target = "liked", source = "liked")
-    @Mapping(target = "pictures", ignore = true)
+    @Mapping(target = "description", source = "description")
     ItemResponse toItemResponse(Item item);
 
-    @Mapping(target = "pictures", ignore = true)
+//    @Mapping(target = "image", ignore = true)
     SearchItemResponse toSearchItemResponse(Item item);
 
     @Mapping(target = "itemID", ignore = true)
     @Mapping(target = "quantity", source = "quantity")
     @Mapping(target = "category", ignore = true)
+    @Mapping(target = "pictures", ignore = true)
+    @Mapping(target = "variants", ignore = true)
     Item updateItem(ItemUpdateRequest request,@MappingTarget Item item);
 
 }

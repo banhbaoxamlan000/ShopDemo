@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders | HS Mall</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Header giống index -->
+    <header class="shadow-sm sticky top-0 z-50" style="background: linear-gradient(90deg, #e0e7ff 0%, #c7d2fe 50%, #fbc2eb 100%); box-shadow: 0 4px 24px 0 rgba(124, 58, 237, 0.08);">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-2 flex items-center relative" style="align-items: center;">
+            <div class="flex flex-col items-start mr-8">
+                <a href="shop-dashboard.html" class="mb-2 px-4 py-2 rounded-md bg-gradient-to-r from-blue-500 to-blue-300 text-white font-semibold shadow hover:from-blue-600 hover:to-blue-400 transition text-base" style="margin-bottom: 0; align-self: flex-start;">Seller Page</a>
+                <a href="index.html" class="text-7xl font-extrabold bg-clip-text text-transparent" style="background-image: linear-gradient(90deg, #FFB347 0%, #FF69B4 100%); line-height: 1.1;">HS Mall</a>
+            </div>
+            <div class="flex-1 flex items-center">
+                <form id="searchForm" class="relative w-full max-w-xl mx-auto flex items-center" style="align-items: center; display: flex;">
+                    <input id="searchInput" type="text" placeholder="Search products..." class="pl-10 pr-4 py-2 border rounded-full w-full focus:outline-none focus:ring-2 focus:ring-indigo-500" style="margin-top: 0; margin-bottom: 0;" />
+                    <button type="submit" class="absolute left-3 top-2.5 text-gray-400" style="top: 50%; transform: translateY(-50%); background: none; border: none; padding: 0; cursor: pointer;">
+                        <i data-feather="search"></i>
+                    </button>
+                </form>
+            </div>
+            <div class="flex items-center space-x-6 ml-8">
+                <div class="relative group" id="cartDropdown" style="display: flex; align-items: center;">
+                    <a href="#" id="cartIcon" class="text-gray-600 hover:text-indigo-600" style="display: flex; align-items: center; position: relative;"><i data-feather="shopping-cart" class="w-8 h-8"></i></a>
+                    <div id="cartMenu" class="hidden absolute left-1/2 transform -translate-x-1/2 top-full mt-3 w-72 bg-white rounded-md shadow-lg z-20" style="min-width: 18rem;">
+                        <div class="p-4">
+                            <h4 class="font-medium text-gray-800">Your Cart</h4>
+                            <div id="cartItems" class="mt-2 space-y-2"></div>
+                            <div id="cartTotal" class="mt-4 flex justify-between items-center"></div>
+                            <a href="cart.html" id="viewCartBtn" class="block mt-4 px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 text-center">View Cart</a>
+                        </div>
+                    </div>
+                </div>
+                <div id="header-profile" class="flex items-center space-x-4"></div>
+            </div>
+        </div>
+    </header>
+    <style>
+        #header-profile { min-width: 120px; justify-content: flex-end; }
+        #header-profile .dropdown-menu {
+            position: absolute;
+            right: 0;
+            top: 110px;
+            width: 160px;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            z-index: 100;
+            display: none;
+        }
+        #header-profile .dropdown-menu.show { display: block; }
+    </style>
+
+    <!-- Nội dung -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex flex-col md:flex-row gap-8">
+            <!-- Sidebar -->
+            <div class="w-full md:w-64 flex-shrink-0">
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div class="p-6 text-center border-b">
+                        <div class="mx-auto h-24 w-24 rounded-full bg-gray-200 overflow-hidden mb-4 relative">
+                            <img id="profile-picture" src="https://placehold.co/150x150?text=Avatar" alt="Profile" class="w-full h-full object-cover">
+                        </div>
+                        <h3 id="profile-name" class="text-lg font-medium text-gray-900">Loading...</h3>
+                        <div id="profile-username" class="text-sm text-indigo-600 font-semibold mt-1"></div>
+                    </div>
+                    <div class="divide-y divide-gray-200">
+                        <a href="profile.html" class="block px-6 py-3 text-sm font-medium text-gray-600 hover:text-indigo-600 hover:bg-indigo-50">My Profile</a>
+                        <a href="orders.html" class="block px-6 py-3 text-sm font-medium text-indigo-600 bg-indigo-50">My Orders</a>
+                        <a href="addresses.html" class="block px-6 py-3 text-sm font-medium text-gray-600 hover:text-indigo-600 hover:bg-indigo-50">My Addresses</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="flex-1">
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div class="p-6 border-b flex justify-between items-center">
+                        <h2 class="text-xl font-bold text-gray-900">My Orders</h2>
+                    </div>
+                    <div class="p-6">
+                        <div id="orderTabs" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-4">
+                            <button data-tab="ALL" class="order-tab h-10 rounded-full border bg-indigo-50 text-indigo-700 w-full">ALL</button>
+                            <button data-tab="TO SHIP" class="order-tab h-10 rounded-full border w-full">TO SHIP</button>
+                            <button data-tab="TO RECEIVE" class="order-tab h-10 rounded-full border w-full">TO RECEIVE</button>
+                            <button data-tab="COMPLETED" class="order-tab h-10 rounded-full border w-full">COMPLETED</button>
+                            <button data-tab="CANCELLED" class="order-tab h-10 rounded-full border w-full">CANCELLED</button>
+                            <button data-tab="RETURN REFUND" class="order-tab h-10 rounded-full border w-full">RETURN REFUND</button>
+                        </div>
+                        <div id="ordersList" class="space-y-4"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div id="reviewModal" class="hidden fixed inset-0 bg-black bg-opacity-30 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow w-full max-w-3xl">
+            <div class="p-4 border-b flex items-center justify-between">
+                <h3 class="text-lg font-medium text-gray-800">Write a Review</h3>
+                <button id="closeReviewModal" class="text-gray-500 hover:text-gray-700 px-2">✕</button>
+            </div>
+            <div class="p-5 space-y-5 max-h-[70vh] overflow-y-auto" id="reviewItemsContainer"></div>
+            <div class="p-4 border-t flex justify-end gap-2">
+                <button id="submitReviewBtn" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Submit Review</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="index.js"></script>
+    <script src="orders.js"></script>
+    <script>feather.replace();</script>
+</body>
+</html>
+
+

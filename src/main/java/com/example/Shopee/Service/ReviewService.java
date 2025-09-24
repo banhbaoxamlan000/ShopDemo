@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +37,7 @@ public class ReviewService {
     ImageMapper imageMapper;
     ReviewMapper reviewMapper;
     private final ShopRepository shopRepository;
+    private final ImageRepository imageRepository;
 
 
     @Transactional
@@ -52,44 +54,37 @@ public class ReviewService {
             throw new AppException(ErrorCode.OVERTIME_REVIEW);
         }
 
-        Set<OrderItem> orderItems = new HashSet<>();
-        for (FeedbackRequest fR : request.getFeedbacks())
+        Set<Item> items = new HashSet<>();
+        for(FeedbackRequest feedbackRequest : request.getFeedbacks())
         {
-            orderItems.add(orderItemRepository.findById(fR.getOrderItemID())
-                    .orElseThrow(()-> new AppException(ErrorCode.NO_RIGHT_REVIEW)));
+            items.add(itemRepository.findById(feedbackRequest.getItemID()).orElseThrow(()-> new AppException(ErrorCode.ITEM_NOT_EXISTED)));
         }
 
         Set<ReviewResponse> response = new HashSet<>();
-        for(OrderItem oi : orderItems)
+
+        for(Item item : items)
         {
-            if(oi.isReview())
-            {
-                throw new AppException(ErrorCode.ALREADY_REVIEW);
-            }
-
-            if(!orders.getOrderItems().contains(oi))
-            {
-                throw new AppException(ErrorCode.NO_RIGHT_REVIEW);
-            }
-            Item item = oi.getItems();
-
             FeedbackRequest feedbackRequest = request.getFeedbacks().stream()
-                    .filter(FeedbackRequest -> FeedbackRequest.getOrderItemID().equals(oi.getOrderItemID()))
+                    .filter(FeedbackRequest -> FeedbackRequest.getItemID().equals(item.getItemID()))
                     .findFirst().orElseThrow(()-> new AppException(ErrorCode.NO_RIGHT_REVIEW));
-            List<Image> reviewImage = new ArrayList<>();
-            for (ImageRequest imageRequest : feedbackRequest.getImageRequests())
-            {
-                reviewImage.add(imageMapper.toImage(imageRequest));
-            }
+
             Review review = Review.builder()
                     .feedback(feedbackRequest.getFeedback())
                     .rate(feedbackRequest.getRate())
                     .date(LocalDate.now())
                     .user(user)
                     .item(item)
-                    .reviewImage(reviewImage)
                     .build();
             reviewRepository.save(review);
+            for (ImageRequest imageRequest : feedbackRequest.getImageRequests())
+            {
+                Image image = Image.builder()
+                        .id(imageRequest.getPictureID())
+                        .review(review)
+                        .build();
+                imageRepository.save(image);
+            }
+
             List<Review> reviews = item.getReviews();
             reviews.add(review);
             item.setReviews(reviews);
@@ -99,27 +94,26 @@ public class ReviewService {
             item.setRate((double)total / quantity);
 
             itemRepository.save(item);
-            List<ImageResponse> imageResponses = new ArrayList<>();
-            for(Image i : reviewImage)
-            {
-                imageResponses.add(imageMapper.toImageResponse(i));
-            }
 
-            oi.setReview(true);
-            orderItemRepository.save(oi);
+
+            Set<OrderItem> orderItems = orders.getOrderItems().stream().filter(orderItem -> orderItem.getItems().equals(item)).collect(Collectors.toSet());
+            for(OrderItem oi : orderItems)
+            {
+                oi.setReview(true);
+                orderItemRepository.save(oi);
+            }
 
             ReviewResponse reviewResponse = reviewMapper.toReviewResponse(review);
             reviewResponse.setUsername(user.getUsername());
-            reviewResponse.setImageResponses(imageResponses);
             response.add(reviewResponse);
         }
 
 
         Shop shop = orders.getShop();
-        Set<Item> items = itemRepository.findByShop(shop);
+        Set<Item> itemSet = itemRepository.findByShop(shop);
         int ratings = 0;
         double total = 0.0;
-        for(Item i : items)
+        for(Item i : itemSet)
         {
             ratings += i.getReviews().size();
             total += i.getReviews().stream().mapToDouble(Review :: getRate).sum();
@@ -127,5 +121,19 @@ public class ReviewService {
         shop.setRatings(ratings);
         shop.setRate(total / ratings);
         return response;
+    }
+
+    public Set<ReviewResponse> getFeedback(Integer itemID)
+    {
+        Item item = itemRepository.findById(itemID).orElseThrow(()-> new AppException(ErrorCode.ITEM_NOT_EXISTED));
+        Set<Review> reviews = reviewRepository.findByItem(item);
+        Set<ReviewResponse> responses = new HashSet<>();
+        for(Review review : reviews)
+        {
+            ReviewResponse reviewResponse = reviewMapper.toReviewResponse(review);
+            reviewResponse.setUsername(review.getUser().getUsername());
+            responses.add(reviewResponse);
+        }
+        return responses;
     }
 }
