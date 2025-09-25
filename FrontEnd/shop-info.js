@@ -24,7 +24,7 @@ async function loadShopData() {
 		// Set shop info
 		document.getElementById("shopName").textContent = shop.shopName;
 		document.getElementById("shopUsername").textContent = shop.shopUsername || "";
-		document.getElementById("shopRate").textContent = shop.rate || "0";
+		document.getElementById("shopRate").textContent = Number(shop.rate || 0).toFixed(1);
 		document.getElementById("shopTotalProduct").textContent = shop.totalProduct || "0";
 		document.getElementById("shopFollowers").textContent = shop.followers || "0";
 		document.getElementById("shopFollowing").textContent = shop.following || "0";
@@ -234,7 +234,7 @@ function renderProducts(products) {
 				<div class="text-sm font-semibold line-clamp-2 mb-2">${p.name}</div>
 				<div class="text-red-500 font-bold mb-1">₫${p.price?.toLocaleString() || "0"}</div>
 				<div class="text-xs text-gray-500">Quantity: ${p.quantity || 0}</div>
-				<div class="text-xs text-orange-500">Rate: ${p.rate || 0}</div>
+				<div class="text-xs text-orange-500">Rate: ${Number(p.rate || 0).toFixed(1)}</div>
 			</div>
 		`;
 		card.onclick = () => {

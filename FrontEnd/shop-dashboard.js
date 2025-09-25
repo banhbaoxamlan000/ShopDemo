@@ -132,7 +132,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                     <div class="text-gray-500 text-sm mb-1">Price: <span class="font-bold text-indigo-600">${(item.price || 0).toLocaleString()}₫</span></div>
                     <div class="text-gray-500 text-sm mb-1">Quantity: <span class="font-bold">${item.quantity || 0}</span></div>
                     <div class="flex gap-3 text-sm text-gray-400">
-                        <span>Rate: ${item.rate || 0}</span>
+                        <span>Rate: ${Number(item.rate || 0).toFixed(1)}</span>
                         <span>Liked: ${item.liked || 0}</span>
                     </div>
                 </div>

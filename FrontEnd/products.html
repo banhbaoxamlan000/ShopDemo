@@ -72,9 +72,8 @@
             <div class="flex-1 flex flex-col">
                 <!-- Khu vực hiển thị thông tin shop khi tìm kiếm -->
                 <div id="shopBar" class="mb-6"></div>
-                <div id="productsGrid" class="grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div id="search-results" class="grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     <!-- Products will be rendered here by JS -->
-                    <div id="search-results"></div>
                 </div>
             </div>
         </div>
@@ -85,14 +84,22 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             if (window.feather) feather.replace();
+            
+            console.log("products.html - DOM loaded, checking renderFilterBar function");
+            console.log("renderFilterBar function exists:", typeof renderFilterBar === 'function');
+            
             // Tích hợp filterBar
             if (typeof renderFilterBar === 'function') {
+                console.log("Calling renderFilterBar...");
                 renderFilterBar('filterBar', {
                     onFilter: function(filterData) {
+                        console.log("Filter applied:", filterData);
                         // Bạn có thể xử lý filterData ở đây, ví dụ gọi fetchProducts(filterData)
                         // Hoặc reload lại sản phẩm theo filter
                     }
                 });
+            } else {
+                console.error("renderFilterBar function not found!");
             }
         });
     </script>

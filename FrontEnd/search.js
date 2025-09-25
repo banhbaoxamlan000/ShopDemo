@@ -34,6 +34,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       return; // Do nothing if no search query or a category is present
     }
 
+    console.log("search.js - Processing search query:", search);
+
     try {
       const res = await fetch("http://localhost:8080/shopee/search", {
         method: "POST",
@@ -45,7 +47,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
 
       const data = await res.json();
+      console.log("search.js - API response:", data);
+      
       if (data.code !== 1 || !data.result) {
+        console.log("search.js - No results or invalid response:", data);
         container.innerHTML = `<p class="text-gray-500">No search results found.</p>`;
         return;
       }
@@ -53,7 +58,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       const items = data.result.itemResponse || [];
       const shops = data.result.shopResponses || [];
 
-      container.innerHTML = "";
+      console.log("search.js - Found items:", items.length, "shops:", shops.length);
+      
+      // Chỉ xóa nội dung items, giữ lại shop bar
+      const existingItems = container.querySelectorAll('.product-card');
+      existingItems.forEach(item => item.remove());
 
      // Render shop info theo dạng thanh ngang, đặt trên items
 if (shops.length > 0) {
@@ -92,7 +101,7 @@ if (shops.length > 0) {
         <div class="text-gray-500">Products</div>
       </div>
       <div class="text-center">
-        <div class="text-yellow-500 font-semibold">${shop.rate || '0'}</div>
+        <div class="text-yellow-500 font-semibold">${Number(shop.rate || 0).toFixed(1)}</div>
         <div class="text-gray-500">Ratings</div>
       </div>
     </div>
@@ -151,32 +160,33 @@ if (shops.length > 0) {
 
 
 
-      // Render items sau shop
+      // Render items sau shop - sử dụng container có sẵn
       if (items.length > 0) {
-        // Tạo wrapper để căn giữa grid sản phẩm, đồng bộ max width với shop bar
-        const wrapper = document.createElement("div");
-        wrapper.className = "flex justify-center w-full mt-6";
-
-        const gridContainer = document.createElement("div");
-        gridContainer.className = "w-full max-w-screen-xl px-4";
-
-        const itemGrid = document.createElement("div");
-        itemGrid.className = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8";
-
-        for (const item of items) {
+        // Render items song song để tối ưu hiệu suất
+        items.forEach(async (item) => {
           let imageUrl = "https://placehold.co/120x120?text=No+Image";
-          if (item.imageID) {
+          if (item.itemID) {
             try {
-              const imgRes = await fetch(`http://localhost:8080/item/image/${item.imageID}`);
+              console.log(`Loading cover image for itemID: ${item.itemID}`);
+              const imgRes = await fetch(`http://localhost:8080/item/coverImage/${item.itemID}`);
               if (imgRes.ok) {
                 const blob = await imgRes.blob();
-                if (blob.size > 0) imageUrl = URL.createObjectURL(blob);
+                if (blob.size > 0) {
+                  imageUrl = URL.createObjectURL(blob);
+                  console.log(`Cover image loaded for itemID: ${item.itemID}`);
+                }
+              } else {
+                console.warn(`Failed to load cover image for itemID: ${item.itemID}, status: ${imgRes.status}`);
               }
-            } catch {}
+            } catch (error) {
+              console.warn('Error loading cover image for itemID:', item.itemID, error);
+            }
+          } else {
+            console.warn('No itemID found for item:', item);
           }
 
           const card = document.createElement("div");
-          card.className = "product-card bg-white rounded-lg shadow-sm border p-4 flex flex-col items-center cursor-pointer hover:shadow-md transition min-w-[200px] max-w-[220px] mx-auto";
+          card.className = "product-card bg-white rounded-lg shadow-sm border p-4 flex flex-col items-center cursor-pointer hover:shadow-md transition";
           card.innerHTML = `
             <img src="${imageUrl}" alt="${item.name}" class="w-24 h-24 object-cover rounded mb-3" />
             <div class="text-center">
@@ -186,7 +196,7 @@ if (shops.length > 0) {
               <div class="flex flex-col items-center justify-center mt-2">
                 <span class="flex items-center justify-center gap-1 text-orange-500 font-semibold text-base">
                   <svg xmlns="http://www.w3.org/2000/svg" class="inline-block" width="18" height="18" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.967c.3.921-.755 1.688-1.54 1.118l-3.38-2.455a1 1 0 00-1.175 0l-3.38 2.455c-.784.57-1.838-.197-1.539-1.118l1.287-3.967a1 1 0 00-.364-1.118L2.174 9.394c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.286-3.967z"/></svg>
-                  <span>Rate: ${item.rate}</span>
+                  <span>Rate: ${Number(item.rate).toFixed(1)}</span>
                 </span>
               </div>
               ${item.city ? `<div class="text-xs text-gray-500 mt-1">City: ${item.city}</div>` : ""}
@@ -195,12 +205,8 @@ if (shops.length > 0) {
           card.addEventListener("click", () => {
             window.location.href = `product-detail.html?id=${item.itemID}`;
           });
-          itemGrid.appendChild(card);
-        }
-
-        gridContainer.appendChild(itemGrid);
-        wrapper.appendChild(gridContainer);
-        container.appendChild(wrapper);
+          container.appendChild(card);
+        });
       }
 
       

@@ -116,7 +116,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     if (shopInfo && shopInfo.result && shopInfo.result.shopResponse) {
         const shop = shopInfo.result.shopResponse;
         document.getElementById("shopName").textContent = shop.shopName;
-        document.getElementById("shopRate").querySelector("span").textContent = shop.rate;
+        document.getElementById("shopRate").querySelector("span").textContent = Number(shop.rate || 0).toFixed(1);
         document.getElementById("shopRatings").querySelector("span").textContent = shop.ratings;
         document.getElementById("shopFollowers").querySelector("span").textContent = shop.followers;
         // Update Products tab with totalProduct

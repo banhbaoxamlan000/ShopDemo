@@ -91,7 +91,8 @@ public class ItemController {
     }
 
     @GetMapping("/search")
-    ApiResponse<List<SearchItemResponse>> searchItemByCriteria(@RequestParam(name = "minPrice", required = false) Double minPrice,
+    ApiResponse<List<SearchItemResponse>> searchItemByCriteria(@RequestParam(name = "search", required = false) String search,
+                                                                @RequestParam(name = "minPrice", required = false) Double minPrice,
                                                                @RequestParam(name = "maxPrice", required = false) Double maxPrice,
                                                                @RequestParam(name = "rate", required = false) Double rate,
                                                                @RequestParam (name = "name", required = false) String name,
@@ -99,7 +100,7 @@ public class ItemController {
                                                                @RequestParam(name = "city", required = false) String city)
     {
         return ApiResponse.<List<SearchItemResponse>>builder()
-                .result(itemService.searchByCriteria(minPrice, maxPrice, rate, name, detail, city))
+                .result(itemService.searchByCriteria(search, minPrice, maxPrice, rate, name, detail, city))
                 .build();
     }
 

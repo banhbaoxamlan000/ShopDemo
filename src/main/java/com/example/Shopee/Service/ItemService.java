@@ -312,13 +312,12 @@ public class ItemService {
 
     Set<Item> filterCategory(Set<Item> items, String name, String detail)
     {
-        if(detail == null)
-            {
+        if(detail.isEmpty()) {
                 return  categoryRepository.findByName(name).stream()
                         .flatMap(category -> items.stream()
                                 .filter(item -> item.getCategory().equals(category)))
                         .collect(Collectors.toSet());
-            }else{
+        }else{
                 Category category = categoryRepository.findByNameAndDetail(name, detail);
 
                 return items.stream().filter(item -> item.getCategory().equals(category)).collect(Collectors.toSet());
@@ -331,14 +330,14 @@ public class ItemService {
         return items.stream().filter(item -> item.getShop().getAddress().getCity().equals(city)).collect(Collectors.toSet());
     }
 
-    public List<SearchItemResponse> searchByCriteria(Double minPrice, Double maxPrice, Double rate, String name, String detail, String city)
+    public List<SearchItemResponse> searchByCriteria(String search, Double minPrice, Double maxPrice, Double rate, String name, String detail, String city)
     {
         Set<Item> items = new HashSet<>();
         if(name == null)
         {
-            items = itemRepository.findByCriteria(minPrice, maxPrice, rate);
+            items = itemRepository.findByCriteria(minPrice, maxPrice, rate, search);
         }else {
-            items = filterCategory(itemRepository.findByCriteria(minPrice, maxPrice, rate), name, detail);
+            items = filterCategory(itemRepository.findByCriteria(minPrice, maxPrice, rate, search), name, detail);
         }
 
         if(city != null)
@@ -350,10 +349,6 @@ public class ItemService {
         for(Item i : items)
         {
             SearchItemResponse s = itemMapper.toSearchItemResponse(i);
-//            ImageResponse imageResponse = ImageResponse.builder()
-//                    .url(ImageUtils.decompressImage(i.getPictures().getFirst().getUrl()))
-//                    .build();
-//            s.setImage(imageResponse);
             responses.add(s);
         }
         return responses;

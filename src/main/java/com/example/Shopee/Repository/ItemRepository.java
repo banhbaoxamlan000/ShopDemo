@@ -30,9 +30,11 @@ public interface ItemRepository extends JpaRepository<Item, Integer> {
     @Query(value = "SELECT * FROM item i " +
             "WHERE (:minPrice IS NULL OR i.price >= :minPrice) " +
             "AND (:maxPrice IS NULL OR i.price <= :maxPrice) " +
-            "AND (:rate IS NULL OR i.rate >= :rate)",
+            "AND (:rate IS NULL OR i.rate >= :rate) " +
+            "AND (:search IS NULL OR LOWER(i.name) LIKE LOWER(CONCAT('%', :search, '%'))) ",
             nativeQuery = true)
     Set<Item> findByCriteria(@Param("minPrice") Double minPrice,
                              @Param("maxPrice") Double maxPrice,
-                             @Param("rate") Double rate);
+                             @Param("rate") Double rate,
+                             @Param("search") String search);
 }
