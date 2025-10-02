@@ -36,6 +36,8 @@ public class User {
 
     String gender;
 
+    LocalDate createAt;
+
     @Column(name = "followings", columnDefinition = "int default 0")
     int followings;
 

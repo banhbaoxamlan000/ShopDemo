@@ -115,13 +115,19 @@ document.addEventListener("DOMContentLoaded", function () {
                 },
                 body: JSON.stringify(body)
             });
-            const data = await response.json();
-            if (response.ok && data.code === 1) {
+            let data;
+            try {
+                data = await response.json();
+            } catch (e) {
+                data = null;
+            }
+            if (response.ok && data && data.code === 1) {
                 localStorage.setItem("resetEmail", body.email);
                 localStorage.setItem("flow", "register");
                 window.location.href = "verify-code.html";
             } else {
-                passwordError.textContent = data.result || "Register failed!";
+                const message = (data && (data.result || data.message)) || `Register failed (${response.status})`;
+                passwordError.textContent = message;
                 passwordError.classList.remove("hidden");
             }
         } catch (error) {
@@ -240,7 +246,13 @@ setupRealtimeCheck("username", "http://localhost:8080/auth/check-username", "Use
 
 // Bắt buộc phone phải đúng 10 số, báo lỗi realtime
 const phoneInput = document.getElementById("phone");
-const phoneMsg = document.getElementById("phoneMsg");
+let phoneMsg = document.getElementById("phoneMsg");
+if (!phoneMsg) {
+    phoneMsg = document.createElement("span");
+    phoneMsg.id = "phoneMsg";
+    phoneMsg.className = "ml-2 text-sm";
+    phoneInput.parentNode.appendChild(phoneMsg);
+}
 phoneInput.addEventListener("input", function() {
     let value = phoneInput.value.replace(/\D/g, "");
     phoneInput.value = value;

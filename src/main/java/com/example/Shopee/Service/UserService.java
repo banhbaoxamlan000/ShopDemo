@@ -25,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Predicate;
 
@@ -94,7 +95,7 @@ public class UserService {
                 Set<Role> roles= new HashSet<>();
                 roleRepository.findById(PredefinedRole.USER_ROLE.getRole()).ifPresent(roles::add);
                 user.setRoles(roles);
-    
+                user.setCreateAt(LocalDate.now());
 
                 UserResponse result = userMapper.toUserResponse(userRepository.save(user));
                 pendingUser.setVerified(true);
@@ -117,6 +118,7 @@ public class UserService {
         }
 
         PendingUser pendingUser = userMapper.toPendingUser(request);
+
 
         pendingUser.setCode(generateRandomNumber());
         pendingUser.setGender(request.getGender());

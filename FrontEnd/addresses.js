@@ -17,18 +17,14 @@ class AddressManager {
     // Load user profile information
     async loadUserProfile() {
         try {
-            const token = localStorage.getItem("token");
-            if (!token) {
-                window.location.href = "login.html";
-                return;
+            // Validate token khi trang load (auto refresh nếu cần)
+            const isValid = await tokenManager.validateTokenOnLoad();
+            if (!isValid) {
+                return; // Đã redirect về login
             }
 
-            const response = await fetch("http://localhost:8080/users/myInfo", {
-                method: "GET",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json"
-                }
+            const response = await tokenManager.apiCall("http://localhost:8080/users/myInfo", {
+                method: "GET"
             });
 
             const data = await response.json();
@@ -50,11 +46,8 @@ class AddressManager {
     // Load user avatar
     async loadUserAvatar(token) {
         try {
-            const response = await fetch("http://localhost:8080/users/avatar", {
-                method: "GET",
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                }
+            const response = await tokenManager.apiCall("http://localhost:8080/users/avatar", {
+                method: "GET"
             });
 
             if (response.ok) {
@@ -79,13 +72,9 @@ class AddressManager {
                 return;
             }
 
-            const response = await fetch("http://localhost:8080/users/addresses", {
-                method: "GET",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json"
-                }
-            });
+        const response = await tokenManager.apiCall("http://localhost:8080/users/addresses", {
+            method: "GET"
+        });
 
             if (response.ok) {
                 const data = await response.json();
@@ -485,12 +474,8 @@ class AddressManager {
             const method = "POST";
             const url = "http://localhost:8080/users/addresses";
 
-            const response = await fetch(url, {
+            const response = await tokenManager.apiCall(url, {
                 method: method,
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json"
-                },
                 body: JSON.stringify(requestData)
             });
 
@@ -525,12 +510,8 @@ class AddressManager {
             const nextAddress = currentIndex !== -1 && this.addresses[currentIndex + 1] ? this.addresses[currentIndex + 1] : null;
 
             const token = localStorage.getItem("token");
-            const response = await fetch(`http://localhost:8080/users/addresses/${addressId}`, {
-                method: "DELETE",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json"
-                }
+            const response = await tokenManager.apiCall(`http://localhost:8080/users/addresses/${addressId}`, {
+                method: "DELETE"
             });
 
             if (response.ok) {
@@ -557,11 +538,8 @@ class AddressManager {
     async setDefaultAddress(addressId) {
         try {
             const token = localStorage.getItem("token");
-            const response = await fetch(`http://localhost:8080/users/addresses/${addressId}`, {
-                method: "PUT",
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                }
+            const response = await tokenManager.apiCall(`http://localhost:8080/users/addresses/${addressId}`, {
+                method: "PUT"
             });
 
             if (!response.ok) {

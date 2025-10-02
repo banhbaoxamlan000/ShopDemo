@@ -5,6 +5,8 @@ import com.example.Shopee.Entity.ShopAddress;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,5 +19,5 @@ public class ShopResponse {
     int ratings ;
     int followers ;
     int totalProduct;
-
+    LocalDate createAt;
 }

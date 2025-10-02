@@ -1,18 +1,20 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    const token = localStorage.getItem('token');
-    if (!token) { window.location.href = 'login.html'; return; }
+    // Validate token khi trang load (auto refresh nếu cần)
+    const isValid = await tokenManager.validateTokenOnLoad();
+    if (!isValid) {
+        return; // Đã redirect về login
+    }
 
     // Load sidebar profile info and avatar
-    await loadUserProfile(token);
+    await loadUserProfile();
 
     const listEl = document.getElementById('ordersList');
     const tabsEl = document.getElementById('orderTabs');
     listEl.innerHTML = '<div class="text-sm text-gray-500">Loading...</div>';
 
     try {
-        const res = await fetch('http://localhost:8080/users/order', {
-            method: 'GET',
-            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        const res = await tokenManager.apiCall('http://localhost:8080/users/order', {
+            method: 'GET'
         });
         if (!res.ok) throw new Error('Request failed');
         const data = await res.json();
@@ -66,11 +68,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-async function loadUserProfile(token) {
+async function loadUserProfile() {
     try {
-        const res = await fetch('http://localhost:8080/users/myInfo', {
-            method: 'GET',
-            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        const res = await tokenManager.apiCall('http://localhost:8080/users/myInfo', {
+            method: 'GET'
         });
         const data = await res.json();
         if (data && data.code === 1 && data.result) {
@@ -86,9 +87,8 @@ async function loadUserProfile(token) {
     try {
         const avatarImg = document.getElementById('profile-picture');
         if (!avatarImg) return;
-        const res = await fetch('http://localhost:8080/users/avatar', {
-            method: 'GET',
-            headers: { 'Authorization': `Bearer ${token}` }
+        const res = await tokenManager.apiCall('http://localhost:8080/users/avatar', {
+            method: 'GET'
         });
         if (res.ok) {
             const blob = await res.blob();

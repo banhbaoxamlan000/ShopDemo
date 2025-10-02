@@ -18,8 +18,9 @@ document.addEventListener("DOMContentLoaded", async function () {
                 "Authorization": `Bearer ${token}`
             }
         });
-        const data = await response.json();
-        if (response.ok && data.result && data.result.shopResponse) {
+        let data;
+        try { data = await response.json(); } catch { data = null; }
+        if (response.ok && data && data.result && data.result.shopResponse) {
             const shop = data.result.shopResponse;
             
             // Avatar
@@ -53,9 +54,17 @@ document.addEventListener("DOMContentLoaded", async function () {
             if (typeDiv) {
                 typeDiv.textContent = shop.type || "";
             }
+        } else {
+            // Not a seller yet or token lacks role -> redirect to register shop
+            if (response.status === 401 || response.status === 403 || (data && (data.code === 1008 || !data.result || !data.result.shopResponse))) {
+                window.location.href = 'register-shop.html';
+                return;
+            }
         }
     } catch (err) {
-        console.error('Error loading shop info:', err);
+        // On failure assume not a seller role
+        window.location.href = 'register-shop.html';
+        return;
     }
 
     // Setup navigation
@@ -82,9 +91,9 @@ document.addEventListener("DOMContentLoaded", async function () {
                 "Authorization": `Bearer ${token}`
             }
         });
-        const data = await response.json();
+        let data; try { data = await response.json(); } catch { data = null; }
         
-        if (response.ok && data.code === 1 && Array.isArray(data.result)) {
+        if (response.ok && data && data.code === 1 && Array.isArray(data.result)) {
             const productsList = document.getElementById("productsList");
             if (!productsList) return;
             
@@ -142,11 +151,12 @@ document.addEventListener("DOMContentLoaded", async function () {
             // Re-render feather icons after adding new content
             feather.replace();
         } else {
-            console.error('Error loading products:', data.message || 'Unknown error');
             const productsList = document.getElementById("productsList");
-            if (productsList) {
-                productsList.innerHTML = '<div class="text-red-500 text-center w-full py-8">Error loading products. Please try again.</div>';
-            }
+            if (!productsList) return;
+            const messageText = (response.status === 400 && data && (data.message || '').toLowerCase().includes("doesn't have any items"))
+                ? 'You have no products yet.'
+                : 'Error loading products. Please try again.';
+            productsList.innerHTML = `<div class="${messageText === 'You have no products yet.' ? 'text-gray-500' : 'text-red-500'} text-center w-full py-8">${messageText}</div>`;
         }
     } catch (err) {
         console.error('Error loading products:', err);

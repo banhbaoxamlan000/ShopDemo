@@ -26,4 +26,5 @@ public class UserResponse {
     String phone;
     CartResponse cart;
     Set<AddressResponse> addressResponses;
+    LocalDate createAt;
 }

@@ -3,11 +3,16 @@ server:
 
 spring:
   profiles:
-    active: uat
+    active: pro
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:data.sql
   jackson:
     date-format: yyyy-MM-dd HH:mm
     time-zone: Asia/Ho_Chi_Minh
@@ -32,3 +37,4 @@ jwt:
   signerKey: "kaeyazqva8OoomPSUJeGlMKoP09zUqh6caZmiYDSfjxfMoI8WJpbiFxyQFP5PNeh"
   valid-duration: 3600 #second
   refreshable-duration: 3600 #second
+

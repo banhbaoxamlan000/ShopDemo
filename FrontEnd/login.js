@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(result => {
                 if (result.code === 1) {
                     const token = result.result.token;
-                    localStorage.setItem('token', token);
+                    tokenManager.setToken(token);
                     window.location.href = 'index.html';
                 } else {
                     throw new Error('Login failed: ' + (result.message || 'Invalid response'));

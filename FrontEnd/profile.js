@@ -36,12 +36,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     initializeCartDropdown();
 
     try {
-        const response = await fetch("http://localhost:8080/users/myInfo", {
-            method: "GET",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            }
+        const response = await tokenManager.apiCall("http://localhost:8080/users/myInfo", {
+            method: "GET"
         });
 
         const data = await response.json();
@@ -57,11 +53,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         // Fetch avatar from backend (blob)
         try {
-            const avatarRes = await fetch("http://localhost:8080/users/avatar", {
-                method: "GET",
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                }
+            const avatarRes = await tokenManager.apiCall("http://localhost:8080/users/avatar", {
+                method: "GET"
             });
             if (avatarRes.ok) {
                 const blob = await avatarRes.blob();
@@ -102,12 +95,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                         return;
                     }
                     try {
-                        const response = await fetch("http://localhost:8080/users/update", {
+                        const response = await tokenManager.apiCall("http://localhost:8080/users/update", {
                             method: "POST",
-                            headers: {
-                                "Authorization": `Bearer ${token}`,
-                                "Content-Type": "application/json"
-                            },
                             body: JSON.stringify({
                                 firstName,
                                 lastName,
@@ -363,22 +352,17 @@ document.getElementById("avatarInput").addEventListener("change", async function
     formData.append("image", file); // key phải là 'image' cho Spring
 
     try {
-        const response = await fetch("http://localhost:8080/users/update/avatar", {
+        const response = await tokenManager.apiCall("http://localhost:8080/users/update/avatar", {
             method: "POST",
-            headers: {
-                "Authorization": `Bearer ${token}`
-            },
+            headers: {}, // FormData sẽ tự set Content-Type
             body: formData
         });
         const data = await response.json();
         if (response.ok && data.code === 1) {
             // Reload avatar from backend, no alert
             try {
-                const avatarRes = await fetch("http://localhost:8080/users/avatar", {
-                    method: "GET",
-                    headers: {
-                        "Authorization": `Bearer ${token}`
-                    }
+                const avatarRes = await tokenManager.apiCall("http://localhost:8080/users/avatar", {
+                    method: "GET"
                 });
                 if (avatarRes.ok) {
                     const blob = await avatarRes.blob();
@@ -402,27 +386,16 @@ document.getElementById("avatarInput").addEventListener("change", async function
 });
 
 document.addEventListener("DOMContentLoaded", async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-        window.location.href = "login.html";
-        return;
+    // Validate token khi trang load (auto refresh nếu cần)
+    const isValid = await tokenManager.validateTokenOnLoad();
+    if (!isValid) {
+        return; // Đã redirect về login
     }
 
     try {
-        const response = await fetch("http://localhost:8080/users/myInfo", {
-            method: "GET",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            }
+        const response = await tokenManager.apiCall("http://localhost:8080/users/myInfo", {
+            method: "GET"
         });
-
-        // Nếu token hết hạn hoặc không hợp lệ, điều hướng về login
-        if (response.status === 401 || response.status === 403) {
-            localStorage.removeItem("token");
-            window.location.href = "login.html";
-            return;
-        }
 
         const data = await response.json();
         if (data.code !== 1) {
@@ -442,7 +415,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     // ...existing code...
 
     } catch (error) {
-        window.location.href = "login.html";
+        console.error("Error loading profile:", error);
+        tokenManager.redirectToLogin();
     }
 });
 

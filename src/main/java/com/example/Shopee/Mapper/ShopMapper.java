@@ -16,6 +16,7 @@ public interface ShopMapper {
     @Mapping(target = "rate", source = "rate")
     @Mapping(target = "ratings", source = "ratings")
     @Mapping(target = "followers", source = "followers")
+    @Mapping(target = "createAt", source = "createAt")
     ShopResponse toShopResponse(Shop shop);
 
 }

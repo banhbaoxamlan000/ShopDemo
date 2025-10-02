@@ -3,9 +3,11 @@ const STATUS_LIST = ['TO SHIP','TO RECEIVE','COMPLETED','CANCELLED','RETURN REFU
 
 document.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('token');
-    if (!token) { window.location.href = 'login.html'; return; }
+    if (!token) { window.location.href = 'register-shop.html'; return; }
 
     // Load sidebar shop info
+    const roleOk = await ensureSellerRole(token);
+    if (!roleOk) { window.location.href = 'register-shop.html'; return; }
     await loadShopSidebar(token);
 
     // Sidebar navigation (Dashboard, Products)
@@ -124,6 +126,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         listEl.innerHTML = '<div class="text-center text-red-500 py-12">Error loading orders.</div>';
     }
 });
+
+async function ensureSellerRole(token){
+    try {
+        const response = await fetch('http://localhost:8080/shop/info', {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        });
+        let data; try { data = await response.json(); } catch { data = null; }
+        if (response.ok && data && data.result && data.result.shopResponse) return true;
+        if (response.status === 401 || response.status === 403) return false;
+        return false;
+    } catch { return false; }
+}
 
 async function loadShopSidebar(token){
     try {

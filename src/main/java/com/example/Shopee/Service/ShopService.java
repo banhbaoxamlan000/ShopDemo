@@ -22,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -42,7 +43,7 @@ public class ShopService {
     ShopRepository shopRepository;
     ItemRepository itemRepository;
     UserService userService;
-    ImageMapper imageMapper;
+
 
     public ShopResponse shopCreate(ShopRequest request) throws ParseException, JOSEException, IOException {
         if(shopRepository.existsByTaxNumber(request.getTaxNumber()))
@@ -68,6 +69,7 @@ public class ShopService {
         Shop shop = shopMapper.toShop(request);
         shop.setUsername(user.getUsername());
         shop.setShopID(user.getUserID());
+        shop.setCreateAt(LocalDate.now());
         userRepository.save(user);
 
         return shopMapper.toShopResponse(shopRepository.save(shop));

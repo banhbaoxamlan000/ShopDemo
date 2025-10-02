@@ -94,18 +94,19 @@ document.addEventListener("DOMContentLoaded", async function () {
 	if (categoryDetailSelect) {
 		categoryDetailSelect.addEventListener("click", fetchCategoryDetails);
 	}
-	const token = localStorage.getItem("token");
-	if (!token) return;
-	try {
-		const response = await fetch("http://localhost:8080/shop/info", {
+    const token = localStorage.getItem("token");
+    if (!token) { window.location.href = 'register-shop.html'; return; }
+    try {
+        const response = await fetch("http://localhost:8080/shop/info", {
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json",
 				"Authorization": `Bearer ${token}`
 			}
 		});
-		const data = await response.json();
-		if (response.ok && data.result && data.result.shopResponse) {
+        let data;
+        try { data = await response.json(); } catch { data = null; }
+        if (response.ok && data && data.result && data.result.shopResponse) {
 			const shop = data.result.shopResponse;
 			// Avatar
 			const avatarImg = document.getElementById('shopAvatarSidebar');
@@ -137,8 +138,11 @@ document.addEventListener("DOMContentLoaded", async function () {
 			if (typeDiv) {
 				typeDiv.textContent = shop.type || "";
 			}
-		}
-	} catch (err) {}
+        } else {
+            window.location.href = 'register-shop.html';
+            return;
+        }
+    } catch (err) { window.location.href = 'register-shop.html'; return; }
 });
 
 // Điều hướng sang shop-dashboard.html khi click vào Dashboard trong sidebar

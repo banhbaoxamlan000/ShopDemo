@@ -159,6 +159,7 @@
         </div>
     </footer>
 
+    <script src="token-manager.js"></script>
     <script src="profile.js"></script>
     <script>
         AOS.init();
@@ -170,33 +171,7 @@
 
         logoutBtn.addEventListener("click", async (e) => {
       e.preventDefault();
-
-      const token = localStorage.getItem("token");
-      if (!token) {
-        return;
-      }
-
-      try {
-        const response = await fetch("http://localhost:8080/auth/logout", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}` // gửi token như login
-          },
-        });
-
-        if (response.ok) {
-          // Xoá token phía client
-          localStorage.removeItem("token");
-          window.location.href = "login.html"; // chuyển về trang login
-        } else {
-          const data = await response.json();
-          alert("Lỗi khi đăng xuất: " + (data.message || response.status));
-        }
-      } catch (error) {
-        console.error("Logout error:", error);
-        alert("Cannot connect to the server!");
-      }
+      await tokenManager.logout();
     });
     });
 </script>

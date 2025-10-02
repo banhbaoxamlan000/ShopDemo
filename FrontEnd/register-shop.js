@@ -1,18 +1,14 @@
 document.addEventListener("DOMContentLoaded", async function () {
-    // Kiểm tra nếu đã có shop thì chuyển hướng về shop.html
+    // Kiểm tra nếu đã có shop thì chuyển hướng về shop-dashboard.html
     const token = localStorage.getItem("token");
     if (token) {
         try {
-            const response = await fetch("http://localhost:8080/shop/info", {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                }
+            const response = await tokenManager.apiCall("http://localhost:8080/shop/info", {
+                method: "GET"
             });
             const data = await response.json();
             if (response.ok && data.code === 1 && data.result && data.result.shopResponse) {
-                window.location.href = "shop.html";
+                window.location.href = "shop-dashboard.html";
                 return;
             }
         } catch (err) {}
@@ -57,36 +53,20 @@ document.addEventListener("DOMContentLoaded", async function () {
         };
 
         try {
-            const response = await fetch("http://localhost:8080/shop/create", {
+            const response = await tokenManager.apiCall("http://localhost:8080/shop/create", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
                 body: JSON.stringify(payload)
             });
             const data = await response.json();
             if (response.ok && data.code === 1) {
-                // Gọi API refresh token
+                // Refresh token sau khi tạo shop thành công
                 try {
-                    const refreshRes = await fetch("http://localhost:8080/auth/refresh", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({ token })
-                    });
-                    const refreshData = await refreshRes.json();
-                    // Sau khi refresh thành công, cập nhật lại biến token
-                    if (refreshRes.ok && refreshData.code === 1 && refreshData.result && refreshData.result.token) {
-                        localStorage.removeItem("token");
-                        localStorage.setItem("token", refreshData.result.token);
-                        token = refreshData.result.token;
-                    }
-                } catch (err) {
-                    // Nếu refresh lỗi, vẫn chuyển hướng nhưng giữ token cũ
+                    await tokenManager.refreshTokenAfterShopCreation();
+                } catch (refreshError) {
+                    console.error("Token refresh failed after shop creation:", refreshError);
+                    // Vẫn chuyển hướng dù refresh thất bại
                 }
-                window.location.href = "shop.html";
+                window.location.href = "shop-dashboard.html";
             } else {
                 alert(data.message || "Failed to create shop!");
             }
